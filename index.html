@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ゆうまmuseum別館</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 全面に薄く流れる動画のエントランス → 展示室ごとの帯（MVが主役）。作品札に作品番号。 */
+:root {
+  --wall: #eef1f0;
+  --panel: #ffffff;
+  --ink: #1f2624;
+  --muted: #5d6865;
+  --tag: #e2a92b;          /* ゆうまの迷子札の金色 */
+  --line: #cfd6d4;
+  --night: #121716;        /* エントランスと映像室の暗幕 */
+  --on-night: #f2f5f4;
+  --display: "Dela Gothic One", "Hiragino Sans", sans-serif;
+  --body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --wall: #171c1b; --panel: #222927; --ink: #e9eeec; --muted: #9aa6a2; --tag: #f0bc4a; --line: #34403d; --night: #0c100f; color-scheme: dark; } }
+:root[data-theme="dark"] { --wall: #171c1b; --panel: #222927; --ink: #e9eeec; --muted: #9aa6a2; --tag: #f0bc4a; --line: #34403d; --night: #0c100f; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--wall); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.8; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: 20px; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--tag); outline-offset: 3px; }
+
+/* ── エントランス ── */
+.hero { position: relative; overflow: hidden; background: var(--night); color: var(--on-night); min-height: min(720px, 88svh); display: grid; align-items: end; isolation: isolate; }
+.hero video, .hero .drift { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .32; z-index: -2; }
+.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(12,16,15,.2) 0%, rgba(12,16,15,.55) 55%, var(--night) 100%); }
+/* 動画が届くまでの代わり：作品タイルがゆっくり流れる */
+.drift { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; padding: 14px; transform: rotate(-6deg) scale(1.25); }
+.drift .col { display: flex; flex-direction: column; gap: 14px; animation: flow 60s linear infinite; }
+.drift .col:nth-child(even) { animation-direction: reverse; animation-duration: 75s; }
+.drift .col span { aspect-ratio: 4/3; border-radius: 6px; background: hsl(var(--h) 30% 42%); }
+@keyframes flow { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+.hero-inner { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 28px 40px; padding-block: 120px 56px; }
+.portrait { width: clamp(140px, 22vw, 220px); aspect-ratio: 1; border-radius: 50%; border: 4px solid var(--tag); overflow: hidden; flex: none;
+  display: grid; place-items: center; background: #2a3230; color: #b9c4c0; font-size: 13px; text-align: center; }
+.portrait img { width: 100%; height: 100%; object-fit: cover; }
+.hero-text { min-width: 0; flex: 1 1 320px; }
+.plate { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--tag); }
+.hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(40px, 8.4vw, 96px); line-height: 1.05; margin: 10px 0 8px; text-wrap: balance; }
+.hero .sub { font-family: var(--display); font-size: clamp(20px, 3.4vw, 32px); margin: 0; letter-spacing: .12em; }
+.hero .lead { margin: 12px 0 0; color: #b9c4c0; max-width: 34em; }
+
+/* ── 館内案内（固定） ── */
+nav.guide { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--wall) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+nav.guide .wrap { display: flex; gap: 8px; overflow-x: auto; padding-block: 10px; scrollbar-width: none; }
+nav.guide a { flex: none; text-decoration: none; font-size: 14px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); white-space: nowrap; }
+nav.guide a b { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-left: 6px; font-weight: 500; }
+nav.guide a:hover { border-color: var(--tag); }
+
+/* ── 展示室 ── */
+section.room { padding-block: 64px 16px; scroll-margin-top: 56px; }
+section.room.dark { background: var(--night); color: var(--on-night); padding-block: 64px 72px; }
+.room-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 28px; }
+.room-head .no { font-family: var(--mono); font-size: 13px; color: var(--tag); letter-spacing: .1em; }
+.room-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 4.6vw, 40px); margin: 0; }
+.room-head .count { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.dark .room-head .count, .dark .card .meta { color: #9aa6a2; }
+.room-head p { flex-basis: 100%; margin: 0; color: var(--muted); }
+.dark .room-head p { color: #b9c4c0; }
+
+.grid { display: grid; gap: 22px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.grid.wide { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.card { display: flex; flex-direction: column; gap: 10px; min-width: 0; text-align: left; background: none; border: 0; padding: 0; cursor: pointer; }
+.card .thumb { position: relative; aspect-ratio: 4/3; border-radius: 6px; overflow: hidden; background: var(--panel); border: 1px solid var(--line); transition: transform .25s ease, box-shadow .25s ease; }
+.wide .card .thumb, .card.video .thumb { aspect-ratio: 16/9; }
+.dark .card .thumb { border-color: #2c3533; background: #1d2422; }
+.card:hover .thumb, .card:focus-visible .thumb { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,.18); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb .ph { position: absolute; inset: 0; display: grid; place-items: center; font-size: 13px; color: var(--muted); border-radius: inherit;
+  background: repeating-linear-gradient(45deg, transparent 0 14px, color-mix(in srgb, var(--line) 50%, transparent) 14px 15px); }
+.dark .thumb .ph { color: #7f8b88; background: repeating-linear-gradient(45deg, transparent 0 14px, #26302d 14px 15px); }
+.thumb .play { position: absolute; left: 12px; bottom: 12px; width: 44px; height: 44px; border-radius: 50%; background: var(--tag); display: grid; place-items: center; }
+.thumb .play::before { content: ""; border-left: 14px solid #1f2624; border-top: 8px solid transparent; border-bottom: 8px solid transparent; margin-left: 4px; }
+.card .cap { border-left: 3px solid var(--tag); padding-left: 10px; }
+.card .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+.card .ttl { font-weight: 700; font-size: 15px; line-height: 1.5; }
+.card.soon { cursor: default; opacity: .55; }
+.card.soon:hover .thumb { transform: none; box-shadow: none; }
+
+/* パラパラ：スクロールで札がめくれるように出てくる（対応ブラウザのみ。非対応でも普通に見える） */
+@supports (animation-timeline: view()) {
+  .flip .card { animation: flipin linear both; animation-timeline: view(); animation-range: entry 0% entry 70%; transform-origin: 50% 0; }
+  @keyframes flipin { from { opacity: .15; transform: perspective(700px) rotateX(-70deg) translateY(30px); } to { opacity: 1; transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .drift .col { animation: none; }
+  .flip .card { animation: none !important; }
+  .hero video { display: none; }
+}
+
+/* ── 拡大表示 ── */
+dialog.viewer { border: 0; padding: 0; background: transparent; width: min(1000px, 94vw); max-height: 92svh; color: var(--on-night); }
+dialog.viewer::backdrop { background: rgba(8,10,10,.86); }
+.viewer .stage { aspect-ratio: 4/3; max-height: 72svh; margin-inline: auto; background: #1d2422; border-radius: 8px; overflow: hidden; display: grid; place-items: center; }
+.viewer .stage.v { aspect-ratio: 16/9; }
+.viewer .stage img, .viewer .stage iframe { width: 100%; height: 100%; object-fit: contain; border: 0; display: block; }
+.viewer .stage .ph { color: #9aa6a2; }
+.viewer .bar { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.viewer .bar .t { flex: 1 1 200px; min-width: 0; }
+.viewer .bar .meta { font-family: var(--mono); font-size: 12px; color: var(--tag); }
+.viewer .bar .ttl { font-weight: 700; font-size: 18px; }
+.viewer .bar .desc { color: #b9c4c0; font-size: 14px; }
+.viewer .btn { border: 1px solid #3a4542; background: #1d2422; border-radius: 999px; padding: 8px 16px; cursor: pointer; text-decoration: none; font-size: 14px; color: var(--on-night); }
+.viewer .btn:hover { border-color: var(--tag); }
+
+footer { padding-block: 48px 64px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <!-- トップに薄く流す動画：media/hero.mp4 を置くと流れる（無音・ループ）。無いときは作品タイルが流れる -->
+  <div class="drift" aria-hidden="true"></div>
+  <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="" hidden></video>
+  <div class="wrap hero-inner">
+    <!-- トップの画像：media/yuma.jpg を置くと表示 -->
+    <div class="portrait" id="portrait">ゆうまの<br>写真まち</div>
+    <div class="hero-text">
+      <div class="plate">YUMA MUSEUM · ANNEX</div>
+      <h1>ゆうまmuseum 別館</h1>
+      <p class="sub">犬の博物館</p>
+      <p class="lead">ゆうまの作品をぜんぶ展示しています。MV、CMパロディ、3Dプリント、写真、ゲーム。どんどん増えます。</p>
+    </div>
+  </div>
+</header>
+
+<nav class="guide" aria-label="館内案内"><div class="wrap" id="guide"></div></nav>
+
+<main id="rooms"></main>
+
+<footer>
+  <div class="wrap">
+    <span>ゆうまmuseum 別館 · 犬の博物館</span>
+    <span>本館（3Dミュージアム）準備中</span>
+  </div>
+</footer>
+
+<dialog class="viewer" id="viewer">
+  <div class="stage" id="stage"></div>
+  <div class="bar">
+    <div class="t"><div class="meta" id="v-meta"></div><div class="ttl" id="v-ttl"></div><div class="desc" id="v-desc"></div></div>
+    <button class="btn" id="v-prev" type="button">前へ</button>
+    <button class="btn" id="v-next" type="button">次へ</button>
+    <button class="btn" id="v-close" type="button">閉じる</button>
+  </div>
+</dialog>
+
+<script>
+/* ============================================================
+   作品リスト：ここに1行足せば展示が増えます
+   - youtube: 動画ID（youtu.be/ の後ろ）
+   - img: 画像ファイル（media/ に置く）
+   - url: ゲームなどのリンク先
+   - soon: true で「準備中」の札
+   ============================================================ */
+const ROOMS = [
+  { id: "mv", no: "ROOM 1", name: "映像室", en: "MUSIC VIDEO", note: "ゆうまが主役のミュージックビデオ。", dark: true, kind: "video", max: 20, items: [
+    { title: "MV 01（タイトル未入力）", youtube: "JQ_ZTt-UFyg" },
+    { title: "MV 02（タイトル未入力）", youtube: "ukmmuA2oTCI" },
+    { title: "MV 03", soon: true },
+  ]},
+  { id: "cm", no: "ROOM 2", name: "CMパロディ室", en: "CM PARODY", note: "あのCMを、ゆうまが演じたら。", kind: "video", items: [
+    { title: "CMパロディ 01", soon: true },
+  ]},
+  { id: "kashima", no: "ROOM 3", name: "鹿島オウンメッセージ", en: "OWN MESSAGE", note: "鹿島オウンメッセージの動画。", kind: "video", items: [
+    { title: "オウンメッセージ 01", soon: true },
+  ]},
+  { id: "print", no: "ROOM 4", name: "造形室", en: "3D PRINT", note: "3Dプリンタで作った作品。スクロールするとパラパラ出てきます。気になったらタップで拡大。", kind: "image", flip: true,
+    items: Array.from({ length: 10 }, (_, i) => ({ title: `3Dプリント作品 ${String(i + 1).padStart(2, "0")}`, desc: "素材・制作年を入れる" })) },
+  { id: "photo", no: "ROOM 5", name: "写真室", en: "PHOTO", note: "ゆうまの写真。", kind: "image", flip: true, items: [
+    { title: "写真 01" }, { title: "写真 02" }, { title: "写真 03" }, { title: "写真 04" },
+  ]},
+  { id: "game", no: "ROOM 6", name: "あそび場", en: "BROWSER GAME", note: "ブラウザで遊べるゆうまのゲーム。", kind: "link", items: [
+    { title: "ゲーム 01", soon: true },
+  ]},
+];
+const PREVIEW = false; // プレビュー画面用（YouTubeを埋め込めない環境ではリンクで開く）
+
+const CODE = { mv: "MV", cm: "CM", kashima: "OM", print: "3D", photo: "PH", game: "GM" };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const thumbOf = it => it.img || (it.youtube ? `https://i.ytimg.com/vi/${it.youtube}/hqdefault.jpg` : "");
+
+// エントランスの流れるタイル
+const drift = $(".drift");
+for (let c = 0; c < 6; c++) {
+  const col = document.createElement("div"); col.className = "col";
+  for (let k = 0; k < 16; k++) { const s = document.createElement("span"); s.style.setProperty("--h", (c * 47 + k * 23) % 360); col.append(s); }
+  drift.append(col);
+}
+// hero.mp4 / yuma.jpg があれば使う
+const vid = $("#hero-video");
+vid.src = "media/hero.mp4";
+vid.addEventListener("loadeddata", () => { vid.hidden = false; drift.hidden = true; });
+const pimg = new Image();
+pimg.onload = () => { const p = $("#portrait"); p.textContent = ""; pimg.alt = "ゆうま"; p.append(pimg); };
+pimg.src = "media/yuma.jpg";
+
+// 展示室を描く
+const flat = [];
+$("#guide").innerHTML = ROOMS.map(r => `<a href="#${r.id}">${esc(r.name)}<b>${r.items.filter(i => !i.soon).length}</b></a>`).join("");
+$("#rooms").innerHTML = ROOMS.map(r => {
+  const live = r.items.filter(i => !i.soon).length;
+  const cards = r.items.map((it, i) => {
+    const code = `YM-${CODE[r.id]}-${String(i + 1).padStart(3, "0")}`;
+    const idx = it.soon ? -1 : flat.push({ ...it, code, kind: r.kind }) - 1;
+    const src = thumbOf(it);
+    const isV = r.kind === "video";
+    return `<button class="card${isV ? " video" : ""}${it.soon ? " soon" : ""}" type="button" ${it.soon ? "disabled" : `data-i="${idx}"`}>
+      <div class="thumb"><div class="ph">${it.soon ? "準備中" : isV ? "" : "写真まち"}</div>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}${isV && !it.soon ? '<span class="play" aria-hidden="true"></span>' : ""}</div>
+      <div class="cap"><div class="meta">${code}</div><div class="ttl">${esc(it.title)}</div></div></button>`;
+  }).join("");
+  return `<section class="room${r.dark ? " dark" : ""}" id="${r.id}"><div class="wrap">
+    <div class="room-head"><span class="no">${r.no} · ${r.en}</span><h2>${esc(r.name)}</h2><span class="count">${live}${r.max ? ` / ${r.max}` : ""} 点</span><p>${esc(r.note)}</p></div>
+    <div class="grid${r.kind === "video" || r.kind === "link" ? " wide" : ""}${r.flip ? " flip" : ""}">${cards}</div></div></section>`;
+}).join("");
+
+// 拡大表示
+const dlg = $("#viewer"); let cur = 0;
+function show(i) {
+  cur = (i + flat.length) % flat.length; const it = flat[cur]; const stage = $("#stage");
+  stage.className = "stage" + (it.youtube ? " v" : "");
+  if (it.youtube && !PREVIEW) stage.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${it.youtube}?autoplay=1" title="${esc(it.title)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+  else if (it.youtube) stage.innerHTML = `<a class="btn" href="https://youtu.be/${it.youtube}" target="_blank" rel="noopener">YouTubeで再生</a>`;
+  else if (it.url) stage.innerHTML = `<a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">あそぶ</a>`;
+  else if (it.img) stage.innerHTML = `<img src="${esc(it.img)}" alt="${esc(it.title)}">`;
+  else stage.innerHTML = `<div class="ph">写真まち</div>`;
+  $("#v-meta").textContent = it.code; $("#v-ttl").textContent = it.title; $("#v-desc").textContent = it.desc || "";
+}
+$("#rooms").addEventListener("click", e => { const b = e.target.closest(".card[data-i]"); if (!b) return; show(+b.dataset.i); dlg.showModal(); });
+$("#v-prev").onclick = () => show(cur - 1);
+$("#v-next").onclick = () => show(cur + 1);
+$("#v-close").onclick = () => dlg.close();
+dlg.addEventListener("close", () => { $("#stage").innerHTML = ""; });
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+document.addEventListener("keydown", e => { if (!dlg.open) return; if (e.key === "ArrowRight") show(cur + 1); if (e.key === "ArrowLeft") show(cur - 1); });
+</script>
+</body>
+</html>
