@@ -6,6 +6,8 @@
 <title>ゆうまmuseum別館</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<!-- 3Dモデルを指で回せるビューア（GLB形式） -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.3.1/dist/model-viewer.min.js"></script>
 <style>
 /* Layout: 全面に薄く流れる動画のエントランス → 展示室ごとの帯（MVが主役）。作品札に作品番号。 */
 :root {
@@ -88,6 +90,9 @@ section.room.dark { background: var(--night); color: var(--on-night); padding-bl
 .card .cap { border-left: 3px solid var(--tag); padding-left: 10px; }
 .card .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
 .card .ttl { font-weight: 700; font-size: 15px; line-height: 1.5; }
+.thumb model-viewer { width: 100%; height: 100%; pointer-events: none; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, var(--panel), color-mix(in srgb, var(--line) 60%, var(--panel))); }
+.thumb .badge3d { position: absolute; right: 10px; top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; background: var(--tag); color: #1f2624; padding: 2px 8px; border-radius: 999px; }
+.viewer model-viewer { width: 100%; height: 100%; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, #2c3533, #141a19); }
 .card.soon { cursor: default; opacity: .55; }
 .card.soon:hover .thumb { transform: none; box-shadow: none; }
 
@@ -182,7 +187,11 @@ const ROOMS = [
     { title: "オウンメッセージ 01", soon: true },
   ]},
   { id: "print", no: "ROOM 4", name: "造形室", en: "3D PRINT", note: "3Dプリンタで作った作品。スクロールするとパラパラ出てきます。気になったらタップで拡大。", kind: "image", flip: true,
-    items: Array.from({ length: 10 }, (_, i) => ({ title: `3Dプリント作品 ${String(i + 1).padStart(2, "0")}`, desc: "素材・制作年を入れる" })) },
+    // model: GLBファイル（media/models/ に置く）→ 指でグルグル回せる
+    items: [
+      { title: "動作確認用サンプル（あとで差し替え）", model: "media/models/sample-dog.glb", desc: "ドラッグ／指で回せます。ピンチで拡大" },
+      ...Array.from({ length: 9 }, (_, i) => ({ title: `3Dプリント作品 ${String(i + 2).padStart(2, "0")}`, desc: "素材・制作年を入れる" })),
+    ] },
   { id: "photo", no: "ROOM 5", name: "写真室", en: "PHOTO", note: "ゆうまの写真。", kind: "image", flip: true, items: [
     { title: "写真 01" }, { title: "写真 02" }, { title: "写真 03" }, { title: "写真 04" },
   ]},
@@ -223,7 +232,7 @@ $("#rooms").innerHTML = ROOMS.map(r => {
     const src = thumbOf(it);
     const isV = r.kind === "video";
     return `<button class="card${isV ? " video" : ""}${it.soon ? " soon" : ""}" type="button" ${it.soon ? "disabled" : `data-i="${idx}"`}>
-      <div class="thumb"><div class="ph">${it.soon ? "準備中" : isV ? "" : "写真まち"}</div>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}${isV && !it.soon ? '<span class="play" aria-hidden="true"></span>' : ""}</div>
+      <div class="thumb"><div class="ph">${it.soon ? "準備中" : isV ? "" : "写真まち"}</div>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : it.model ? `<model-viewer src="${esc(it.model)}" loading="lazy" auto-rotate rotation-per-second="18deg" interaction-prompt="none" environment-image="neutral" shadow-intensity="1" camera-orbit="35deg 70deg auto"></model-viewer>` : ""}${it.model ? '<span class="badge3d">3D</span>' : ""}${isV && !it.soon ? '<span class="play" aria-hidden="true"></span>' : ""}</div>
       <div class="cap"><div class="meta">${code}</div><div class="ttl">${esc(it.title)}</div></div></button>`;
   }).join("");
   return `<section class="room${r.dark ? " dark" : ""}" id="${r.id}"><div class="wrap">
@@ -239,6 +248,7 @@ function show(i) {
   if (it.youtube && !PREVIEW) stage.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${it.youtube}?autoplay=1" title="${esc(it.title)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
   else if (it.youtube) stage.innerHTML = `<a class="btn" href="https://youtu.be/${it.youtube}" target="_blank" rel="noopener">YouTubeで再生</a>`;
   else if (it.url) stage.innerHTML = `<a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">あそぶ</a>`;
+  else if (it.model) stage.innerHTML = `<model-viewer src="${esc(it.model)}" alt="${esc(it.title)}" camera-controls auto-rotate auto-rotate-delay="2000" touch-action="pan-y" environment-image="neutral" shadow-intensity="1" camera-orbit="35deg 70deg auto"></model-viewer>`;
   else if (it.img) stage.innerHTML = `<img src="${esc(it.img)}" alt="${esc(it.title)}">`;
   else stage.innerHTML = `<div class="ph">写真まち</div>`;
   $("#v-meta").textContent = it.code; $("#v-ttl").textContent = it.title; $("#v-desc").textContent = it.desc || "";
