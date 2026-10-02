@@ -90,7 +90,7 @@ section.room.dark { background: var(--night); color: var(--on-night); padding-bl
 .card .cap { border-left: 3px solid var(--tag); padding-left: 10px; }
 .card .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
 .card .ttl { font-weight: 700; font-size: 15px; line-height: 1.5; }
-.thumb model-viewer { width: 100%; height: 100%; pointer-events: none; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, var(--panel), color-mix(in srgb, var(--line) 60%, var(--panel))); }
+.thumb model-viewer { width: 100%; height: 100%; pointer-events: none; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, #3a4542, #161c1b); }
 .thumb .badge3d { position: absolute; right: 10px; top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; background: var(--tag); color: #1f2624; padding: 2px 8px; border-radius: 999px; }
 .viewer model-viewer { width: 100%; height: 100%; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, #2c3533, #141a19); }
 .card.soon { cursor: default; opacity: .55; }
@@ -189,8 +189,9 @@ const ROOMS = [
   { id: "print", no: "ROOM 4", name: "造形室", en: "3D PRINT", note: "3Dプリンタで作った作品。スクロールするとパラパラ出てきます。気になったらタップで拡大。", kind: "image", flip: true,
     // model: GLBファイル（media/models/ に置く）→ 指でグルグル回せる
     items: [
-      { title: "動作確認用サンプル（あとで差し替え）", model: "media/models/sample-dog.glb", desc: "ドラッグ／指で回せます。ピンチで拡大" },
-      ...Array.from({ length: 9 }, (_, i) => ({ title: `3Dプリント作品 ${String(i + 2).padStart(2, "0")}`, desc: "素材・制作年を入れる" })),
+      { title: "ぽんねこ", model: "media/models/ponneko_id17.glb", desc: "ドラッグ／指で回せます。ピンチで拡大" },
+      { title: "ゆうま のっかり", desc: "3Dデータ準備中" },
+      ...Array.from({ length: 8 }, (_, i) => ({ title: `3Dプリント作品 ${String(i + 3).padStart(2, "0")}`, desc: "素材・制作年を入れる" })),
     ] },
   { id: "photo", no: "ROOM 5", name: "写真室", en: "PHOTO", note: "ゆうまの写真。", kind: "image", flip: true, items: [
     { title: "写真 01" }, { title: "写真 02" }, { title: "写真 03" }, { title: "写真 04" },
