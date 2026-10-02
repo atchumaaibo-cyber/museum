@@ -194,7 +194,7 @@ const ROOMS = [
     // model: GLBファイル（media/models/ に置く）→ 指でグルグル回せる
     items: [
       { title: "ぽんねこ", model: "media/models/ponneko_id17.glb", desc: "ドラッグ／指で回せます。ピンチで拡大" },
-      { title: "ゆうま のっかり", desc: "3Dデータ準備中" },
+      { title: "ゆうま のっかり", model: "media/models/yuma_nokkari_id19.glb", desc: "ドラッグ／指で回せます。ピンチで拡大" },
       ...Array.from({ length: 8 }, (_, i) => ({ title: `3Dプリント作品 ${String(i + 3).padStart(2, "0")}`, desc: "素材・制作年を入れる" })),
     ] },
   { id: "photo", no: "ROOM 5", name: "写真室", en: "PHOTO", note: "ゆうまの写真。", kind: "image", flip: true, items: [
