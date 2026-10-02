@@ -7,7 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <!-- 3Dモデルを指で回せるビューア（GLB形式） -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.3.1/dist/model-viewer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
 <style>
 /* Layout: 全面に薄く流れる動画のエントランス → 展示室ごとの帯（MVが主役）。作品札に作品番号。 */
 :root {
@@ -90,9 +93,10 @@ section.room.dark { background: var(--night); color: var(--on-night); padding-bl
 .card .cap { border-left: 3px solid var(--tag); padding-left: 10px; }
 .card .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
 .card .ttl { font-weight: 700; font-size: 15px; line-height: 1.5; }
-.thumb model-viewer { width: 100%; height: 100%; pointer-events: none; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, #3a4542, #161c1b); }
+.thumb .m3d { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 40%, #3a4542, #161c1b); }
+.m3d canvas { display: block; width: 100% !important; height: 100% !important; }
 .thumb .badge3d { position: absolute; right: 10px; top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; background: var(--tag); color: #1f2624; padding: 2px 8px; border-radius: 999px; }
-.viewer model-viewer { width: 100%; height: 100%; --poster-color: transparent; background: radial-gradient(circle at 50% 40%, #2c3533, #141a19); }
+.viewer .m3d { width: 100%; height: 100%; touch-action: none; cursor: grab; background: radial-gradient(circle at 50% 40%, #2c3533, #141a19); }
 .card.soon { cursor: default; opacity: .55; }
 .card.soon:hover .thumb { transform: none; box-shadow: none; }
 
@@ -233,7 +237,7 @@ $("#rooms").innerHTML = ROOMS.map(r => {
     const src = thumbOf(it);
     const isV = r.kind === "video";
     return `<button class="card${isV ? " video" : ""}${it.soon ? " soon" : ""}" type="button" ${it.soon ? "disabled" : `data-i="${idx}"`}>
-      <div class="thumb"><div class="ph">${it.soon ? "準備中" : isV ? "" : "写真まち"}</div>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : it.model ? `<model-viewer src="${esc(it.model)}" loading="lazy" auto-rotate rotation-per-second="18deg" interaction-prompt="none" environment-image="neutral" shadow-intensity="1" camera-orbit="35deg 70deg auto"></model-viewer>` : ""}${it.model ? '<span class="badge3d">3D</span>' : ""}${isV && !it.soon ? '<span class="play" aria-hidden="true"></span>' : ""}</div>
+      <div class="thumb"><div class="ph">${it.soon ? "準備中" : isV ? "" : "写真まち"}</div>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : it.model ? `<div class="m3d" data-model="${esc(it.model)}"></div>` : ""}${it.model ? '<span class="badge3d">3D</span>' : ""}${isV && !it.soon ? '<span class="play" aria-hidden="true"></span>' : ""}</div>
       <div class="cap"><div class="meta">${code}</div><div class="ttl">${esc(it.title)}</div></div></button>`;
   }).join("");
   return `<section class="room${r.dark ? " dark" : ""}" id="${r.id}"><div class="wrap">
@@ -242,14 +246,15 @@ $("#rooms").innerHTML = ROOMS.map(r => {
 }).join("");
 
 // 拡大表示
-const dlg = $("#viewer"); let cur = 0;
+const dlg = $("#viewer"); let cur = 0, dlgView = null;
 function show(i) {
+  if (dlgView) { dlgView.dispose(); dlgView = null; }
   cur = (i + flat.length) % flat.length; const it = flat[cur]; const stage = $("#stage");
   stage.className = "stage" + (it.youtube ? " v" : "");
   if (it.youtube && !PREVIEW) stage.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${it.youtube}?autoplay=1" title="${esc(it.title)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
   else if (it.youtube) stage.innerHTML = `<a class="btn" href="https://youtu.be/${it.youtube}" target="_blank" rel="noopener">YouTubeで再生</a>`;
   else if (it.url) stage.innerHTML = `<a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">あそぶ</a>`;
-  else if (it.model) stage.innerHTML = `<model-viewer src="${esc(it.model)}" alt="${esc(it.title)}" camera-controls auto-rotate auto-rotate-delay="2000" touch-action="pan-y" environment-image="neutral" shadow-intensity="1" camera-orbit="35deg 70deg auto"></model-viewer>`;
+  else if (it.model) { stage.innerHTML = `<div class="m3d" role="img" aria-label="${esc(it.title)}"></div>`; dlgView = view3d(stage.firstChild, it.model, true); }
   else if (it.img) stage.innerHTML = `<img src="${esc(it.img)}" alt="${esc(it.title)}">`;
   else stage.innerHTML = `<div class="ph">写真まち</div>`;
   $("#v-meta").textContent = it.code; $("#v-ttl").textContent = it.title; $("#v-desc").textContent = it.desc || "";
@@ -258,7 +263,53 @@ $("#rooms").addEventListener("click", e => { const b = e.target.closest(".card[d
 $("#v-prev").onclick = () => show(cur - 1);
 $("#v-next").onclick = () => show(cur + 1);
 $("#v-close").onclick = () => dlg.close();
-dlg.addEventListener("close", () => { $("#stage").innerHTML = ""; });
+dlg.addEventListener("close", () => { if (dlgView) { dlgView.dispose(); dlgView = null; } $("#stage").innerHTML = ""; });
+
+// ── 3Dビューア（three.js）：カードではゆっくり回転、拡大表示では指で回せる ──
+const MODEL_DATA = {}; // プレビュー用に埋め込んだモデル（本番では空）
+const glbCache = {};
+function loadGLB(path) {
+  if (!glbCache[path]) glbCache[path] = (MODEL_DATA[path]
+    ? Promise.resolve(Uint8Array.from(atob(MODEL_DATA[path]), c => c.charCodeAt(0)).buffer)
+    : fetch(path).then(r => r.arrayBuffer()));
+  return glbCache[path].then(buf => new Promise((ok, ng) => new THREE.GLTFLoader().parse(buf.slice(0), "", g => ok(g.scene), ng)));
+}
+function view3d(box, path, interactive) {
+  if (!window.THREE) return { dispose() {} };
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.85;
+  box.append(renderer.domElement);
+  const scene = new THREE.Scene();
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+  const sun = new THREE.DirectionalLight(0xffffff, 0.7); sun.position.set(2, 4, 3); scene.add(sun);
+  const cam = new THREE.PerspectiveCamera(35, 1, 0.001, 100);
+  const pivot = new THREE.Group(); scene.add(pivot);
+  let controls = null, alive = true, raf = 0;
+  if (interactive) { controls = new THREE.OrbitControls(cam, renderer.domElement); controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 1.5; controls.enablePan = false; }
+  function size() { const w = box.clientWidth || 1, h = box.clientHeight || 1; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+  const ro = new ResizeObserver(size); ro.observe(box); size();
+  loadGLB(path).then(obj => {
+    if (!alive) return;
+    const b = new THREE.Box3().setFromObject(obj), c = b.getCenter(new THREE.Vector3()), r = b.getBoundingSphere(new THREE.Sphere()).radius;
+    obj.position.sub(c); pivot.add(obj);
+    const d = r / Math.sin(THREE.MathUtils.degToRad(cam.fov / 2)) * 1.45;
+    cam.position.set(d * 0.55, d * 0.35, d * 0.76); cam.near = d / 100; cam.far = d * 10; cam.updateProjectionMatrix(); cam.lookAt(0, 0, 0);
+    if (controls) { controls.target.set(0, 0, 0); controls.minDistance = d * 0.3; controls.maxDistance = d * 3; controls.update(); }
+  }).catch(e => { box.textContent = "3Dを読み込めませんでした"; console.error(e); });
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  (function tick() { if (!alive) return; raf = requestAnimationFrame(tick); if (controls) controls.update(); else if (!still) pivot.rotation.y += 0.005; renderer.render(scene, cam); })();
+  return { dispose() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); controls?.dispose(); pm.dispose(); renderer.dispose(); renderer.forceContextLoss(); } };
+}
+// カードの3Dは画面に入ったときだけ動かす
+const thumbViews = new Map();
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting && !thumbViews.has(e.target)) thumbViews.set(e.target, view3d(e.target, e.target.dataset.model, false));
+  else if (!e.isIntersecting && thumbViews.has(e.target)) { thumbViews.get(e.target).dispose(); thumbViews.delete(e.target); e.target.innerHTML = ""; }
+}), { rootMargin: "200px" });
+document.querySelectorAll(".thumb .m3d").forEach(el => io.observe(el));
 dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 document.addEventListener("keydown", e => { if (!dlg.open) return; if (e.key === "ArrowRight") show(cur + 1); if (e.key === "ArrowLeft") show(cur - 1); });
 </script>
