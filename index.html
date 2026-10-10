@@ -61,6 +61,18 @@ nav.guide a { flex: none; text-decoration: none; font-size: 14px; padding: 6px 1
 nav.guide a b { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-left: 6px; font-weight: 500; }
 nav.guide a:hover { border-color: var(--tag); }
 
+/* 来館スタンプ：展示室を最後まで見ると肉球が押される */
+nav.guide a .paw { width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; fill: none; stroke: var(--line); stroke-width: 1.5; transition: fill .3s, stroke .3s; }
+nav.guide a.stamped { border-color: var(--tag); }
+nav.guide a.stamped .paw { fill: var(--tag); stroke: var(--tag); }
+nav.guide .wrap { align-items: center; }
+nav.guide .book { flex: none; margin-left: auto; padding-left: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 24px); opacity: 0; pointer-events: none; z-index: 30;
+  max-width: calc(100vw - 32px); padding: 10px 18px; border-radius: 999px; background: var(--night); color: var(--on-night); border: 2px solid var(--tag); font-size: 14px; text-align: center; transition: opacity .3s, transform .3s; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+.room-end { height: 1px; }
+@media (prefers-reduced-motion: reduce) { .toast, nav.guide a .paw { transition: none; } }
+
 /* ── 展示室 ── */
 section.room { padding-block: 64px 16px; scroll-margin-top: 56px; }
 section.room.dark { background: var(--night); color: var(--on-night); padding-block: 64px 72px; }
@@ -147,6 +159,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <nav class="guide" aria-label="館内案内"><div class="wrap" id="guide"></div></nav>
 
 <main id="rooms"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <footer>
   <div class="wrap">
@@ -220,7 +233,8 @@ pimg.src = "media/yuma.jpg";
 
 // 展示室を描く
 const flat = [];
-$("#guide").innerHTML = ROOMS.map(r => `<a href="#${r.id}">${esc(r.name)}<b>${r.items.filter(i => !i.soon).length}</b></a>`).join("");
+const PAW = '<svg class="paw" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="16" rx="5" ry="4"/><circle cx="5.5" cy="10.5" r="2"/><circle cx="9.5" cy="6" r="2"/><circle cx="14.5" cy="6" r="2"/><circle cx="18.5" cy="10.5" r="2"/></svg>';
+$("#guide").innerHTML = ROOMS.map(r => `<a href="#${r.id}" data-room="${r.id}">${PAW}${esc(r.name)}<b>${r.items.filter(i => !i.soon).length}</b></a>`).join("") + '<span class="book" id="book"></span>';
 $("#rooms").innerHTML = ROOMS.map(r => {
   const live = r.items.filter(i => !i.soon).length;
   const cards = r.items.map((it, i) => {
@@ -234,8 +248,32 @@ $("#rooms").innerHTML = ROOMS.map(r => {
   }).join("");
   return `<section class="room${r.dark ? " dark" : ""}" id="${r.id}"><div class="wrap">
     <div class="room-head"><span class="no">${r.no} · ${r.en}</span><h2>${esc(r.name)}</h2><span class="count">${live}${r.max ? ` / ${r.max}` : ""} 点</span><p>${esc(r.note)}</p></div>
-    <div class="grid${r.kind === "video" || r.kind === "link" ? " wide" : ""}${r.flip ? " flip" : ""}">${cards}</div></div></section>`;
+    <div class="grid${r.kind === "video" || r.kind === "link" ? " wide" : ""}${r.flip ? " flip" : ""}">${cards}</div><div class="room-end" data-end="${r.id}"></div></div></section>`;
 }).join("");
+
+// 来館スタンプ：各室の終わりが画面に入ったら押す（ブラウザに保存。保存できなくても動く）
+const KEY = "yuma-annex-stamps";
+let stamps = [];
+try { stamps = JSON.parse(localStorage.getItem(KEY) || "[]").filter(id => ROOMS.some(r => r.id === id)); } catch (e) {}
+const toast = $("#toast"); let toastTimer;
+const say = msg => { toast.textContent = msg; toast.classList.add("on"); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("on"), 3200); };
+function renderStamps() {
+  document.querySelectorAll("#guide a[data-room]").forEach(a => a.classList.toggle("stamped", stamps.includes(a.dataset.room)));
+  $("#book").textContent = `スタンプ ${stamps.length} / ${ROOMS.length}`;
+}
+function stamp(id) {
+  if (stamps.includes(id)) return;
+  stamps.push(id);
+  try { localStorage.setItem(KEY, JSON.stringify(stamps)); } catch (e) {}
+  renderStamps();
+  const r = ROOMS.find(x => x.id === id);
+  say(stamps.length === ROOMS.length ? "全室制覇！ スタンプ帳がそろいました" : `「${r.name}」のスタンプをゲット（${stamps.length} / ${ROOMS.length}）`);
+}
+renderStamps();
+if ("IntersectionObserver" in window) {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { stamp(e.target.dataset.end); io.unobserve(e.target); } }));
+  document.querySelectorAll(".room-end").forEach(el => { if (!stamps.includes(el.dataset.end)) io.observe(el); });
+}
 
 // 拡大表示
 const dlg = $("#viewer"); let cur = 0;
