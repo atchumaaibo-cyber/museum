@@ -85,9 +85,23 @@ nav.guide a:hover { border-color: var(--tag); }
 
 /* ── 展示室 ── */
 section.room { padding-block: 64px 16px; scroll-margin-top: 56px; }
-section.room.dark { background: transparent; color: var(--on-night); padding-block: 64px 72px; }
+/* 部屋ごとに色味と網目を少しずつ変える（2026-10-13 あっち「項目ごとに色調かドットを変えて変化を。奇抜でなくていい」）。
+   色は上下でふわっと消えるので、部屋の境目に線は出ない。--tint＝色味、--dp＝点の間隔、--dr＝点の大きさ */
+section.room { --tint: transparent; --dp: 5px; --dr: 1.2px; background:
+  radial-gradient(circle, rgba(0,0,0,.38) var(--dr), transparent calc(var(--dr) + .5px)) 0 0 / var(--dp) var(--dp),
+  linear-gradient(180deg, transparent, var(--tint) 22%, var(--tint) 78%, transparent); }
+#mv    { --acc: #7cc4d4; --tint: rgba(40, 95, 115, .13); }                         /* 映像室：青緑の暗幕 */
+#short { --acc: #e8b25a; --tint: rgba(175, 115, 40, .10); --dp: 4px; --dr: 1px; }  /* ショート劇場：琥珀、細かめ */
+#ig    { --acc: #e48aa0; --tint: rgba(165, 70, 95, .10); --dp: 6px; --dr: 1.4px; } /* イラスト展：ばら色、粗め */
+#cm    { --acc: #8fa6ee; --tint: rgba(60, 85, 165, .12); background:               /* CMパロディ室：青、テレビの走査線 */
+  repeating-linear-gradient(180deg, rgba(0,0,0,.32) 0 1px, transparent 1px 4px),
+  linear-gradient(180deg, transparent, var(--tint) 22%, var(--tint) 78%, transparent); }
+#print { --acc: #b4c2cc; --tint: rgba(125, 140, 150, .10); --dp: 7px; --dr: 1.7px; } /* 造形室：鉄の灰青、大きい点 */
+#photo { --acc: #d9b77c; --tint: rgba(155, 125, 75, .11); --dp: 4px; --dr: .9px; }  /* 写真室：セピア、フィルムの粒 */
+#game  { --acc: #b79ae6; --tint: rgba(110, 70, 165, .12); --dp: 6px; --dr: 1.3px; } /* あそび場：紫 */
+section.room.dark { color: var(--on-night); padding-block: 64px 72px; }
 .room-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 28px; }
-.room-head .no { font-family: var(--mono); font-size: 13px; color: var(--tag); letter-spacing: .1em; }
+.room-head .no { font-family: var(--mono); font-size: 13px; color: var(--acc, var(--tag)); letter-spacing: .1em; }
 .room-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 4.6vw, 40px); margin: 0; }
 .room-head .count { font-family: var(--mono); font-size: 13px; color: var(--muted); }
 .dark .room-head .count, .dark .card .meta { color: #9aa6a2; }
