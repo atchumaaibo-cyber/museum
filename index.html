@@ -47,8 +47,10 @@ button { font: inherit; color: inherit; }
 .hero { position: relative; overflow: hidden; background: var(--night) url(media/hero.jpg) center / cover; color: var(--on-night); min-height: min(720px, 88svh); display: grid; align-items: end; isolation: isolate; }
 .hero video, .hero .drift { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
 .hero .drift { opacity: .32; }
-/* 全面に黒いフィルター。動画は裏で動いている感じに */
-.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.62) 60%, var(--night) 100%); }
+/* 全面に黒いフィルター＋細かい黒の網目（3px ごとの点）。動画は裏で動いている感じに */
+.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background:
+  radial-gradient(circle, rgba(0,0,0,.75) .7px, transparent 1.1px) 0 0 / 3px 3px,
+  linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.55) 60%, var(--night) 100%); }
 /* 動画が届くまでの代わり：作品タイルがゆっくり流れる */
 .drift { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; padding: 14px; transform: rotate(-6deg) scale(1.25); }
 .drift .col { display: flex; flex-direction: column; gap: 14px; animation: flow 60s linear infinite; }
@@ -114,6 +116,10 @@ section.room.dark { background: var(--night); color: var(--on-night); padding-bl
 /* 回る棚（ドーナツ）：サムネが輪っかに並び、前の 1 枚が一番大きい。輪の奥ほど上・小さく・暗く。作品が増えても縦に伸びない */
 .ring { --w: min(520px, 70vw); --h: calc(var(--w) * 9 / 16); --rise: calc(var(--h) * .42); position: relative; user-select: none; }
 .ring.tall { --w: min(230px, 46vw); --h: calc(var(--w) * 16 / 9); --rise: calc(var(--h) * .22); }
+.ring.port { --w: min(300px, 56vw); --h: calc(var(--w) * 5 / 4); --rise: calc(var(--h) * .28); }
+.ring.pic { --w: min(420px, 64vw); --h: calc(var(--w) * 3 / 4); --rise: calc(var(--h) * .36); }
+.ring .card.far { visibility: hidden; }
+.ring.one .spin, .ring.one .dots, .ring.many .dots { display: none; }
 .ring .stage3d { position: relative; height: calc(var(--h) + var(--rise) + 28px); touch-action: pan-y; overflow: hidden; outline: none; }
 .ring .card { position: absolute; left: 50%; top: calc(var(--rise) + 14px); width: var(--w); margin-left: calc(var(--w) / -2); will-change: transform; }
 .ring .card .thumb { aspect-ratio: auto; height: var(--h); transition: none; }
@@ -235,7 +241,7 @@ const ROOMS = [
   { id: "short", no: "ROOM 2", name: "ショート劇場", en: "SHORT FILM", note: "あっち家、ユウマ目線「変だよね」など、SNSに出した短い動画。", kind: "video", tall: true, ring: true, items: [
     ...W("short"),
   ]},
-  { id: "ig", no: "ROOM 3", name: "イラスト展", en: "INSTAGRAM", note: "インスタに載せた絵と写真。タップすると、めくって見られます。", kind: "image", flip: true, tall: true, items: [
+  { id: "ig", no: "ROOM 3", name: "イラスト展", en: "INSTAGRAM", note: "インスタに載せた絵と写真。タップすると、めくって見られます。", kind: "image", flip: true, tall: true, shape: "port", items: [
     ...W("ig"),
   ]},
   { id: "cm", no: "ROOM 4", name: "CMパロディ室", en: "CM PARODY", note: "あのCMを、ゆうまが演じたら。", kind: "video", items: [
@@ -244,14 +250,14 @@ const ROOMS = [
   { id: "kashima", no: "ROOM 5", name: "鹿島オウンメッセージ", en: "OWN MESSAGE", note: "鹿島オウンメッセージの動画。", kind: "video", items: [
     { title: "オウンメッセージ 01", soon: true },
   ]},
-  { id: "print", no: "ROOM 6", name: "造形室", en: "3D PRINT", note: "3Dプリンタで作った作品。スクロールするとパラパラ出てきます。気になったらタップで拡大。", kind: "image", flip: true,
+  { id: "print", no: "ROOM 6", name: "造形室", en: "3D PRINT", note: "3Dプリンタで作った作品。気になったらタップで拡大。", kind: "image", flip: true, shape: "pic",
     // model: GLBファイル（media/models/ に置く）→ 指でグルグル回せる
     items: [
       { title: "ぽんねこ", model: "media/models/ponneko_id17.glb", desc: "ドラッグ／指で回せます。ピンチで拡大" },
       { title: "ゆうま のっかり", model: "media/models/yuma_nokkari_id19.glb", desc: "ドラッグ／指で回せます。ピンチで拡大" },
       ...Array.from({ length: 8 }, (_, i) => ({ title: `3Dプリント作品 ${String(i + 3).padStart(2, "0")}`, desc: "素材・制作年を入れる" })),
     ] },
-  { id: "photo", no: "ROOM 7", name: "写真室", en: "PHOTO", note: "ゆうまの写真。", kind: "image", flip: true, items: [
+  { id: "photo", no: "ROOM 7", name: "写真室", en: "PHOTO", note: "ゆうまの写真。", kind: "image", flip: true, shape: "pic", items: [
     ...W("photo"),
     { title: "写真 02" }, { title: "写真 03" }, { title: "写真 04" },
   ]},
@@ -294,12 +300,12 @@ $("#rooms").innerHTML = ROOMS.map(r => {
     const src = thumbOf(it);
     const isV = r.kind === "video" && !r.tall;
     return `<button class="card${isV ? " video" : ""}${it.soon ? " soon" : ""}" type="button" ${it.soon ? "disabled" : `data-i="${idx}"`}>
-      <div class="thumb"><div class="ph">${it.soon ? "準備中" : isV ? "" : r.kind === "link" ? "GAME" : "写真まち"}</div>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="${it.youtube && it.tall ? `if(!this.dataset.f){this.dataset.f=1;this.src='https://i.ytimg.com/vi/${it.youtube}/hqdefault.jpg'}else ` : ""}this.remove()">` : it.model ? `<div class="m3d" data-model="${esc(it.model)}"></div>` : ""}${it.model ? '<span class="badge3d">3D</span>' : ""}${it.youtube && !it.soon ? '<span class="play" aria-hidden="true"></span>' : ""}${it.imgs?.length > 1 ? `<span class="pages">${it.imgs.length}枚</span>` : ""}${it.pick ? '<span class="pick">おすすめ</span>' : ""}</div>
+      <div class="thumb"><div class="ph">${it.soon ? "準備中" : isV ? "" : r.kind === "link" ? "GAME" : "写真まち"}</div>${src ? `<img data-src="${esc(src)}" alt="" onerror="${it.youtube && it.tall ? `if(!this.dataset.f){this.dataset.f=1;this.src='https://i.ytimg.com/vi/${it.youtube}/hqdefault.jpg'}else ` : ""}this.remove()">` : it.model ? `<div class="m3d" data-model="${esc(it.model)}"></div>` : ""}${it.model ? '<span class="badge3d">3D</span>' : ""}${it.youtube && !it.soon ? '<span class="play" aria-hidden="true"></span>' : ""}${it.imgs?.length > 1 ? `<span class="pages">${it.imgs.length}枚</span>` : ""}${it.pick ? '<span class="pick">おすすめ</span>' : ""}</div>
       <div class="cap"><div class="meta">${code}</div><div class="ttl">${esc(it.title)}</div>${it.date ? `<div class="date">${esc(it.date)}</div>` : ""}</div></button>`;
   }).join("");
   return `<section class="room${r.dark ? " dark" : ""}" id="${r.id}"><div class="wrap">
     <div class="room-head"><span class="no">${r.no} · ${r.en}</span><h2>${esc(r.name)}</h2><span class="count">${live}${r.max ? ` / ${r.max}` : ""} 点</span><p>${esc(r.note)}</p></div>
-    ${r.ring ? `<div class="ring${r.tall ? " tall" : ""}"><div class="stage3d" tabindex="0" aria-label="${esc(r.name)}。左右の矢印で回せます">${cards}</div>
+    ${r.ring !== false ? `<div class="ring ${r.shape || (r.tall ? "tall" : "")}${r.items.length < 2 ? " one" : ""}"><div class="stage3d" tabindex="0" aria-label="${esc(r.name)}。左右の矢印で回せます">${cards}</div>
       <button class="spin l" type="button" aria-label="前へ（合わせている間は速く回る）"><span>‹</span></button><button class="spin r" type="button" aria-label="次へ（合わせている間は速く回る）"><span>›</span></button>
       <div class="rcap" aria-live="polite"></div><div class="dots"></div></div>`
     : `<div class="grid${r.tall ? " tallgrid" : r.kind === "video" || r.kind === "link" ? " wide" : ""}${r.flip ? " flip" : ""}">${cards}</div>`}</div></section>`;
@@ -312,13 +318,21 @@ document.querySelectorAll(".ring").forEach(ring => {
   const tall = ring.classList.contains("tall"), still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let target = 0, pos = 0, raf = 0, fast = false;
   const mod = i => ((i % n) + n) % n;
+  // 輪に並べるのは最大 12 枚分の席。作品が多いときは前後 6 枚ずつだけ描き、残りは隠して絵も読まない（50 点でも重ならず軽い）
+  const seats = Math.min(n, 12), half = seats / 2;
+  if (n > 12) ring.classList.add("many");
   dots.innerHTML = cards.map((_, i) => `<button type="button" aria-label="${i + 1}番目"></button>`).join("");
   function layout() {
-    const W = stage.clientWidth, w = cards[0].offsetWidth, h = cards[0].offsetHeight;
-    const rx = Math.min(W * (tall ? 0.36 : 0.34), w * (tall ? 1.7 : 0.95)), rise = h * (tall ? 0.22 : 0.42);
+    const W = stage.clientWidth, w = cards[0].offsetWidth, h = cards[0].offsetHeight, a = w / h; // a: 横÷縦
+    const rx = Math.min(W * (a < 1 ? 0.36 : 0.34), w * (a < 0.7 ? 1.7 : a < 1 ? 1.35 : a < 1.5 ? 1.05 : 0.95));
+    const rise = h * (a < 0.7 ? 0.22 : a < 1 ? 0.28 : a < 1.5 ? 0.36 : 0.42);
     cards.forEach((c, i) => {
       let t = i - pos; if (n > 2) { t = ((t % n) + n) % n; if (t > n / 2) t -= n; }
-      const th = n > 2 ? (2 * Math.PI * t) / n : t * 0.9, near = (1 + Math.cos(th)) / 2; // near: 前=1、奥=0
+      const far = n > 12 && Math.abs(t) > half;
+      c.classList.toggle("far", far);
+      if (Math.abs(t) <= half + 1) { const im = c.querySelector("img[data-src]"); if (im) { im.src = im.dataset.src; im.removeAttribute("data-src"); } }
+      if (far) return;
+      const th = n > 2 ? (2 * Math.PI * t) / seats : t * 0.9, near = (1 + Math.cos(th)) / 2; // near: 前=1、奥=0
       c.style.transform = `translate(${Math.sin(th) * rx}px, ${-(1 - near) * rise}px) scale(${0.42 + 0.58 * near})`;
       c.style.zIndex = Math.round(near * 100) + 1;
       c.style.filter = `brightness(${0.4 + 0.6 * near})`;
