@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ゆうまmuseum別館</title>
+<!-- トップの動画の1コマ目を先に取りに行く（開いてすぐ絵が出るように） -->
+<link rel="preload" as="image" href="media/hero.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <!-- 3Dモデルを指で回せるビューア（GLB形式） -->
@@ -42,9 +44,11 @@ button { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--tag); outline-offset: 3px; }
 
 /* ── エントランス ── */
-.hero { position: relative; overflow: hidden; background: var(--night); color: var(--on-night); min-height: min(720px, 88svh); display: grid; align-items: end; isolation: isolate; }
-.hero video, .hero .drift { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .32; z-index: -2; }
-.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(12,16,15,.2) 0%, rgba(12,16,15,.55) 55%, var(--night) 100%); }
+.hero { position: relative; overflow: hidden; background: var(--night) url(media/hero.jpg) center / cover; color: var(--on-night); min-height: min(720px, 88svh); display: grid; align-items: end; isolation: isolate; }
+.hero video, .hero .drift { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+.hero .drift { opacity: .32; }
+/* 全面に黒いフィルター。動画は裏で動いている感じに */
+.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.62) 60%, var(--night) 100%); }
 /* 動画が届くまでの代わり：作品タイルがゆっくり流れる */
 .drift { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; padding: 14px; transform: rotate(-6deg) scale(1.25); }
 .drift .col { display: flex; flex-direction: column; gap: 14px; animation: flow 60s linear infinite; }
@@ -107,19 +111,22 @@ section.room.dark { background: var(--night); color: var(--on-night); padding-bl
 .card.soon:hover .thumb { transform: none; box-shadow: none; }
 .thumb .pick { position: absolute; left: 10px; top: 10px; font-size: 11px; font-weight: 700; background: var(--tag); color: #1f2624; padding: 2px 8px; border-radius: 999px; }
 
-/* 回る棚（カバーフロー）：前に来た 1 枚だけ大きく、左右は奥へ。作品が増えても縦に伸びない */
-.ring { --w: min(560px, 74vw); --h: calc(var(--w) * 9 / 16); position: relative; user-select: none; }
-.ring.tall { --w: min(250px, 50vw); --h: calc(var(--w) * 16 / 9); }
-.ring .stage3d { position: relative; height: calc(var(--h) + 24px); perspective: 1100px; touch-action: pan-y; overflow: hidden; outline: none; }
-.ring .card { position: absolute; left: 50%; top: 12px; width: var(--w); margin-left: calc(var(--w) / -2); transition: transform .45s cubic-bezier(.2,.7,.2,1), opacity .45s, filter .45s; }
-.ring .card .thumb { aspect-ratio: auto; height: var(--h); }
+/* 回る棚（ドーナツ）：サムネが輪っかに並び、前の 1 枚が一番大きい。輪の奥ほど上・小さく・暗く。作品が増えても縦に伸びない */
+.ring { --w: min(520px, 70vw); --h: calc(var(--w) * 9 / 16); --rise: calc(var(--h) * .42); position: relative; user-select: none; }
+.ring.tall { --w: min(230px, 46vw); --h: calc(var(--w) * 16 / 9); --rise: calc(var(--h) * .22); }
+.ring .stage3d { position: relative; height: calc(var(--h) + var(--rise) + 28px); touch-action: pan-y; overflow: hidden; outline: none; }
+.ring .card { position: absolute; left: 50%; top: calc(var(--rise) + 14px); width: var(--w); margin-left: calc(var(--w) / -2); will-change: transform; }
+.ring .card .thumb { aspect-ratio: auto; height: var(--h); transition: none; }
 .ring .card .cap { display: none; }
-.ring .card:not(.front) .thumb { filter: brightness(.6); }
-.ring .card:not(.front) .play { display: none; }
+.ring .card:not(.front) .play, .ring .card:not(.front) .pick { display: none; }
 .ring .card:hover .thumb { transform: none; }
-.ring .card.front .thumb { box-shadow: 0 18px 40px rgba(0,0,0,.35); }
-.ring .rbtn { position: absolute; top: calc(12px + var(--h) / 2); translate: 0 -50%; z-index: 50; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(18,23,22,.72); color: #f2f5f4; font-size: 22px; cursor: pointer; }
-.ring .rbtn.l { left: 4px; } .ring .rbtn.r { right: 4px; }
+.ring .card.front .thumb { box-shadow: 0 18px 40px rgba(0,0,0,.4); }
+/* 左右の端：マウスを合わせている間（スマホは長押し）、速く回り続ける。押すと 1 つ進む */
+.ring .spin { position: absolute; top: 0; height: calc(var(--h) + var(--rise) + 28px); width: 15%; z-index: 300; border: 0; padding: 0; cursor: pointer; color: #f2f5f4; font-size: 26px; display: grid; align-items: center; opacity: .55; transition: opacity .2s; touch-action: pan-y; -webkit-touch-callout: none; }
+.ring .spin.l { left: 0; background: linear-gradient(90deg, rgba(0,0,0,.28), transparent); justify-items: start; padding-left: 10px; }
+.ring .spin.r { right: 0; background: linear-gradient(270deg, rgba(0,0,0,.28), transparent); justify-items: end; padding-right: 10px; }
+.ring .spin:hover, .ring .spin.on { opacity: 1; }
+.ring .spin span { width: 40px; height: 40px; border-radius: 50%; background: rgba(18,23,22,.72); display: grid; place-items: center; }
 .ring .rcap { text-align: center; margin-top: 12px; min-height: 4.2em; }
 .ring .rcap .ttl { font-weight: 700; font-size: 16px; }
 .ring .rcap .meta { font-family: var(--mono); font-size: 12px; color: var(--muted); }
@@ -172,9 +179,11 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <body>
 
 <header class="hero">
-  <!-- トップに薄く流す動画：media/hero.mp4 を置くと流れる（無音・ループ）。無いときは作品タイルが流れる -->
-  <div class="drift" aria-hidden="true"></div>
-  <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="" hidden></video>
+  <!-- トップの裏で流す動画：お散歩日和の先頭 60 秒（無音・ループ）。PC は media/hero.mp4（1280 幅）、スマホは media/hero_sp.mp4（640 幅）。
+       届くまでは 1 コマ目の media/hero.jpg を出しておく。動画も 1 コマ目も無いときだけ作品タイルが流れる -->
+  <div class="drift" aria-hidden="true" hidden></div>
+  <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="media/hero.jpg" aria-hidden="true"></video>
+  <script>document.getElementById("hero-video").src = matchMedia("(max-width: 700px)").matches ? "media/hero_sp.mp4" : "media/hero.mp4";</script>
   <div class="wrap hero-inner">
     <!-- トップの画像：media/yuma.jpg を置くと表示 -->
     <div class="portrait" id="portrait">ゆうまの<br>写真まち</div>
@@ -267,10 +276,9 @@ for (let c = 0; c < 6; c++) {
   for (let k = 0; k < 16; k++) { const s = document.createElement("span"); s.style.setProperty("--h", (c * 47 + k * 23) % 360); col.append(s); }
   drift.append(col);
 }
-// hero.mp4 / yuma.jpg があれば使う
+// 動画が読めなかったときは作品タイルを流す
 const vid = $("#hero-video");
-vid.src = "media/hero.mp4";
-vid.addEventListener("loadeddata", () => { vid.hidden = false; drift.hidden = true; });
+vid.addEventListener("error", () => { vid.hidden = true; drift.hidden = false; });
 const pimg = new Image();
 pimg.onload = () => { const p = $("#portrait"); p.textContent = ""; pimg.alt = "ゆうま"; p.append(pimg); };
 pimg.src = "media/yuma.jpg";
@@ -292,52 +300,77 @@ $("#rooms").innerHTML = ROOMS.map(r => {
   return `<section class="room${r.dark ? " dark" : ""}" id="${r.id}"><div class="wrap">
     <div class="room-head"><span class="no">${r.no} · ${r.en}</span><h2>${esc(r.name)}</h2><span class="count">${live}${r.max ? ` / ${r.max}` : ""} 点</span><p>${esc(r.note)}</p></div>
     ${r.ring ? `<div class="ring${r.tall ? " tall" : ""}"><div class="stage3d" tabindex="0" aria-label="${esc(r.name)}。左右の矢印で回せます">${cards}</div>
-      <button class="rbtn l" type="button" aria-label="前へ">‹</button><button class="rbtn r" type="button" aria-label="次へ">›</button>
+      <button class="spin l" type="button" aria-label="前へ（合わせている間は速く回る）"><span>‹</span></button><button class="spin r" type="button" aria-label="次へ（合わせている間は速く回る）"><span>›</span></button>
       <div class="rcap" aria-live="polite"></div><div class="dots"></div></div>`
     : `<div class="grid${r.tall ? " tallgrid" : r.kind === "video" || r.kind === "link" ? " wide" : ""}${r.flip ? " flip" : ""}">${cards}</div>`}</div></section>`;
 }).join("");
 
-// 回る棚：今の 1 枚（a）を前に、ほかは左右の奥へ。端まで行くと反対側につながる（輪っか）
+// 回る棚（ドーナツ）：カードを上から少し見下ろした輪に並べる。target が今の番号（はみ出してよい）、pos はそこへ滑らかに追いかける
 document.querySelectorAll(".ring").forEach(ring => {
   const stage = ring.querySelector(".stage3d"), cards = [...stage.children], n = cards.length;
   const cap = ring.querySelector(".rcap"), dots = ring.querySelector(".dots");
-  let a = 0;
+  const tall = ring.classList.contains("tall"), still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let target = 0, pos = 0, raf = 0, fast = false;
+  const mod = i => ((i % n) + n) % n;
   dots.innerHTML = cards.map((_, i) => `<button type="button" aria-label="${i + 1}番目"></button>`).join("");
-  const off = i => { let d = i - a; if (n > 2) { d = ((d % n) + n) % n; if (d > n / 2) d -= n; } return d; };
-  function draw() {
-    const w = cards[0].offsetWidth, far = innerWidth < 700 ? 2 : 3;
+  function layout() {
+    const W = stage.clientWidth, w = cards[0].offsetWidth, h = cards[0].offsetHeight;
+    const rx = Math.min(W * (tall ? 0.36 : 0.34), w * (tall ? 1.7 : 0.95)), rise = h * (tall ? 0.22 : 0.42);
     cards.forEach((c, i) => {
-      const d = off(i), s = Math.sign(d), k = Math.abs(d);
-      c.classList.toggle("front", d === 0);
-      c.style.transform = `translateX(${d * w * (ring.classList.contains("tall") ? 0.62 : 0.5)}px) translateZ(${-k * w * 0.45}px) rotateY(${-s * Math.min(k, 1) * 38}deg)`;
-      c.style.opacity = k > far ? 0 : 1 - k * 0.22;
-      c.style.zIndex = 20 - k;
-      c.style.pointerEvents = k > far ? "none" : "";
-      c.tabIndex = d === 0 ? 0 : -1;
+      let t = i - pos; if (n > 2) { t = ((t % n) + n) % n; if (t > n / 2) t -= n; }
+      const th = n > 2 ? (2 * Math.PI * t) / n : t * 0.9, near = (1 + Math.cos(th)) / 2; // near: 前=1、奥=0
+      c.style.transform = `translate(${Math.sin(th) * rx}px, ${-(1 - near) * rise}px) scale(${0.42 + 0.58 * near})`;
+      c.style.zIndex = Math.round(near * 100) + 1;
+      c.style.filter = `brightness(${0.4 + 0.6 * near})`;
     });
+  }
+  function tick() {
+    const d = target - pos;
+    pos = Math.abs(d) < 0.002 || still ? target : pos + d * (fast ? 0.35 : 0.14);
+    layout();
+    raf = pos === target ? 0 : requestAnimationFrame(tick);
+  }
+  function go(i) {
+    target = n > 2 ? i : Math.max(0, Math.min(n - 1, i));
+    const a = mod(target);
+    cards.forEach((c, k) => { c.classList.toggle("front", k === a); c.tabIndex = k === a ? 0 : -1; });
     const t = cards[a], ttl = t.querySelector(".ttl")?.textContent || "", date = t.querySelector(".date")?.textContent || "";
     cap.innerHTML = `<div class="ttl">${esc(ttl)}</div><div class="meta">${esc(date)}${date ? " · " : ""}${a + 1} / ${n}</div>`;
-    [...dots.children].forEach((b, i) => b.setAttribute("aria-current", i === a));
+    [...dots.children].forEach((b, k) => b.setAttribute("aria-current", k === a));
+    if (!raf) raf = requestAnimationFrame(tick);
   }
-  const go = i => { a = n > 2 ? ((i % n) + n) % n : Math.max(0, Math.min(n - 1, i)); draw(); };
-  ring.querySelector(".rbtn.l").onclick = () => go(a - 1);
-  ring.querySelector(".rbtn.r").onclick = () => go(a + 1);
-  dots.onclick = e => { const b = e.target.closest("button"); if (b) go([...dots.children].indexOf(b)); };
-  stage.addEventListener("keydown", e => { if (e.key === "ArrowRight") { go(a + 1); e.preventDefault(); } if (e.key === "ArrowLeft") { go(a - 1); e.preventDefault(); } });
+  // 一番近い回り方でその番号へ
+  const goTo = k => { let d = k - mod(target); if (n > 2) { d = mod(d); if (d > n / 2) d -= n; } go(target + d); };
+  dots.onclick = e => { const b = e.target.closest("button"); if (b) goTo([...dots.children].indexOf(b)); };
+  stage.addEventListener("keydown", e => { if (e.key === "ArrowRight") { go(target + 1); e.preventDefault(); } if (e.key === "ArrowLeft") { go(target - 1); e.preventDefault(); } });
+  // 左右の端：合わせている間（スマホは長押し）速く回り続ける
+  ring.querySelectorAll(".spin").forEach(z => {
+    const dir = z.classList.contains("r") ? 1 : -1;
+    let timer = 0, hold = 0, spun = false;
+    const start = () => { if (timer) return; fast = true; z.classList.add("on"); spun = true; go(target + dir); timer = setInterval(() => go(target + dir), 150); };
+    const stop = () => { clearInterval(timer); clearTimeout(hold); timer = hold = 0; fast = false; z.classList.remove("on"); };
+    z.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") { spun = false; hold = setTimeout(start, 120); } });
+    z.addEventListener("pointerleave", stop);
+    z.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") { spun = false; hold = setTimeout(start, 300); } });
+    z.addEventListener("pointerup", e => { if (e.pointerType !== "mouse") stop(); });
+    z.addEventListener("pointercancel", stop);
+    z.addEventListener("contextmenu", e => e.preventDefault());
+    z.addEventListener("click", () => { if (!spun) go(target + dir); spun = false; });
+  });
   // 横のホイール（トラックパッドの横スクロール）で回す。縦のスクロールはページのまま
   let wt = 0;
-  stage.addEventListener("wheel", e => { if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; e.preventDefault(); if (Date.now() - wt < 350) return; wt = Date.now(); go(a + Math.sign(e.deltaX)); }, { passive: false });
+  stage.addEventListener("wheel", e => { if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; e.preventDefault(); if (Date.now() - wt < 250) return; wt = Date.now(); go(target + Math.sign(e.deltaX)); }, { passive: false });
   // 指・マウスで左右にはらう
   let x0 = null;
   stage.addEventListener("pointerdown", e => { x0 = e.clientX; });
-  stage.addEventListener("pointerup", e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) { ring.dataset.drag = 1; go(a - Math.sign(dx)); setTimeout(() => delete ring.dataset.drag, 0); } });
+  stage.addEventListener("pointerup", e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) { ring.dataset.drag = 1; go(target - Math.sign(dx)); setTimeout(() => delete ring.dataset.drag, 0); } });
   // 前以外のカードを押したら、そのカードを前に回す（再生はしない）
   stage.addEventListener("click", e => {
     const c = e.target.closest(".card"); if (!c) return;
-    if (ring.dataset.drag || !c.classList.contains("front")) { e.stopPropagation(); if (!ring.dataset.drag) go(cards.indexOf(c)); }
+    if (ring.dataset.drag || !c.classList.contains("front")) { e.stopPropagation(); if (!ring.dataset.drag) goTo(cards.indexOf(c)); }
   });
-  addEventListener("resize", draw);
-  draw();
+  addEventListener("resize", layout);
+  go(0);
 });
 
 // 拡大表示
