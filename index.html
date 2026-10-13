@@ -4,53 +4,75 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ゆうまmuseum別館</title>
+<!-- トップの動画の1コマ目を先に取りに行く（開いてすぐ絵が出るように） -->
+<link rel="preload" as="image" href="media/hero.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<!-- 3Dモデルを指で回せるビューア（GLB形式） -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<!-- SNS に出した作品（museum_sync.py build で作る） -->
+<script src="works.js"></script>
 <style>
 /* Layout: 全面に薄く流れる動画のエントランス → 展示室ごとの帯（MVが主役）。作品札に作品番号。 */
 :root {
-  --wall: #eef1f0;
-  --panel: #ffffff;
-  --ink: #1f2624;
-  --muted: #5d6865;
-  --tag: #e2a92b;          /* ゆうまの迷子札の金色 */
-  --line: #cfd6d4;
-  --night: #121716;        /* エントランスと映像室の暗幕 */
+  /* 館内はぜんぶ暗い色（2026-10-13 あっち「グレーに急になるから違和感。トップの効果と馴染むように」） */
+  --wall: #161b1a;
+  --panel: #212826;
+  --ink: #e9eeec;
+  --muted: #9aa6a2;
+  --tag: #f0bc4a;          /* ゆうまの迷子札の金色 */
+  --line: #333e3b;
+  --night: #0e1211;        /* エントランスと映像室の暗幕 */
   --on-night: #f2f5f4;
   --display: "Dela Gothic One", "Hiragino Sans", sans-serif;
   --body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, monospace;
-  color-scheme: light;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --wall: #171c1b; --panel: #222927; --ink: #e9eeec; --muted: #9aa6a2; --tag: #f0bc4a; --line: #34403d; --night: #0c100f; color-scheme: dark; } }
-:root[data-theme="dark"] { --wall: #171c1b; --panel: #222927; --ink: #e9eeec; --muted: #9aa6a2; --tag: #f0bc4a; --line: #34403d; --night: #0c100f; color-scheme: dark; }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--wall); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.8; }
+/* 館内の壁にもトップと同じ網目（5px ごとの点）をごく薄く。上（映像室のあたり）は暗く、下へ少しずつ明るく */
+body { margin: 0; background:
+  radial-gradient(circle, rgba(0,0,0,.35) 1.2px, transparent 1.7px) 0 0 / 5px 5px,
+  linear-gradient(180deg, var(--night) 0, var(--wall) 1400px) var(--wall); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.8; }
 .wrap { max-width: 1160px; margin: 0 auto; padding-inline: 20px; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--tag); outline-offset: 3px; }
 
 /* ── エントランス ── */
-.hero { position: relative; overflow: hidden; background: var(--night); color: var(--on-night); min-height: min(720px, 88svh); display: grid; align-items: end; isolation: isolate; }
-.hero video, .hero .drift { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .32; z-index: -2; }
-.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(12,16,15,.2) 0%, rgba(12,16,15,.55) 55%, var(--night) 100%); }
+.hero { position: relative; overflow: hidden; background: var(--night) url(media/hero.jpg) center / cover; color: var(--on-night); min-height: min(760px, 92svh); display: flex; flex-direction: column; justify-content: space-between; isolation: isolate; }
+.hero video, .hero .drift { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+.hero .drift { opacity: .32; }
+/* 全面に黒いフィルター＋黒の網目（5px ごとの点）。動画は裏で動いている感じに */
+.hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background:
+  radial-gradient(circle, rgba(0,0,0,.8) 1.2px, transparent 1.7px) 0 0 / 5px 5px,
+  linear-gradient(180deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.42) 45%, rgba(0,0,0,.58) 70%, var(--night) 100%); }
 /* 動画が届くまでの代わり：作品タイルがゆっくり流れる */
 .drift { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; padding: 14px; transform: rotate(-6deg) scale(1.25); }
 .drift .col { display: flex; flex-direction: column; gap: 14px; animation: flow 60s linear infinite; }
 .drift .col:nth-child(even) { animation-direction: reverse; animation-duration: 75s; }
 .drift .col span { aspect-ratio: 4/3; border-radius: 6px; background: hsl(var(--h) 30% 42%); }
 @keyframes flow { from { transform: translateY(0); } to { transform: translateY(-50%); } }
-.hero-inner { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 28px 40px; padding-block: 120px 56px; }
+/* タイトルは上に大きく 2 行：ゆうま（白）／museum（線だけ）＋別館の札 */
+.hero-top { padding-top: clamp(36px, 7vw, 72px); }
+.hero .mark { font-family: var(--display); font-weight: 400; margin: 12px 0 0; line-height: .9; letter-spacing: -.01em; font-size: clamp(58px, 13.5vw, 172px); }
+.mark span { display: block; animation: rise .9s cubic-bezier(.2,.7,.2,1) both; }
+.mark span + span { animation-delay: .15s; }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+@media (prefers-reduced-motion: reduce) { .mark span { animation: none; } }
+.mark .o { color: transparent; -webkit-text-stroke: clamp(1.5px, .25vw, 3px) #f2f5f4; }
+.mark em { font-style: normal; display: inline-block; vertical-align: top; margin: .35em 0 0 .3em; padding: .3em .6em; font-size: .17em; letter-spacing: .3em; line-height: 1; color: #1f2624; background: var(--tag); -webkit-text-stroke: 0; border-radius: 3px; }
+.hero-inner { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 24px 36px; padding-block: 40px 56px; }
 .portrait { width: clamp(140px, 22vw, 220px); aspect-ratio: 1; border-radius: 50%; border: 4px solid var(--tag); overflow: hidden; flex: none;
   display: grid; place-items: center; background: #2a3230; color: #b9c4c0; font-size: 13px; text-align: center; }
 .portrait img { width: 100%; height: 100%; object-fit: cover; }
 .hero-text { min-width: 0; flex: 1 1 320px; }
 .plate { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--tag); }
-.hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(40px, 8.4vw, 96px); line-height: 1.05; margin: 10px 0 8px; text-wrap: balance; }
 .hero .sub { font-family: var(--display); font-size: clamp(20px, 3.4vw, 32px); margin: 0; letter-spacing: .12em; }
 .hero .lead { margin: 12px 0 0; color: #b9c4c0; max-width: 34em; }
 
@@ -63,9 +85,42 @@ nav.guide a:hover { border-color: var(--tag); }
 
 /* ── 展示室 ── */
 section.room { padding-block: 64px 16px; scroll-margin-top: 56px; }
-section.room.dark { background: var(--night); color: var(--on-night); padding-block: 64px 72px; }
+/* 部屋ごとに色味と網目を少しずつ変える（2026-10-13 あっち「項目ごとに色調かドットを変えて変化を。奇抜でなくていい」）。
+   色は上下でふわっと消えるので、部屋の境目に線は出ない。--tint＝色味、--dp＝点の間隔、--dr＝点の大きさ */
+section.room { --tint: transparent; --dp: 5px; --dr: 1.2px; background:
+  radial-gradient(circle, rgba(0,0,0,.38) var(--dr), transparent calc(var(--dr) + .5px)) 0 0 / var(--dp) var(--dp),
+  linear-gradient(180deg, transparent, var(--tint) 22%, var(--tint) 78%, transparent); }
+#mv    { --acc: #7cc4d4; --tint: rgba(40, 95, 115, 0.18); }                         /* 映像室：青緑の暗幕 */
+#short { --acc: #e8b25a; --tint: rgba(175, 115, 40, 0.14); --dp: 4px; --dr: 1px; }  /* ショート劇場：琥珀、細かめ */
+#ig    { --acc: #e48aa0; --tint: rgba(165, 70, 95, 0.14); --dp: 6px; --dr: 1.4px; } /* イラスト展：ばら色、粗め */
+#cm    { --acc: #8fa6ee; --tint: rgba(60, 85, 165, 0.16); background:               /* CMパロディ室：青、テレビの走査線 */
+  repeating-linear-gradient(180deg, rgba(0,0,0,.32) 0 1px, transparent 1px 4px),
+  linear-gradient(180deg, transparent, var(--tint) 22%, var(--tint) 78%, transparent); }
+#print { --acc: #b4c2cc; --tint: rgba(125, 140, 150, 0.14); --dp: 7px; --dr: 1.7px; } /* 造形室：鉄の灰青、大きい点 */
+#photo { --acc: #d9b77c; --tint: rgba(155, 125, 75, 0.15); --dp: 4px; --dr: .9px; }  /* 写真室：セピア、フィルムの粒 */
+#game  { --acc: #b79ae6; --tint: rgba(110, 70, 165, 0.16); --dp: 6px; --dr: 1.3px; } /* あそび場：紫 */
+/* 部屋に入ったときの演出（1 回だけ・約 1 秒。2026-10-13 あっち「新しい部屋に入りました！みたいな効果。大掛かりでなく」）
+   ① 部屋の色が上からふわっと灯って落ち着く ② 番号・部屋名が下から出る ③ 部屋の色の細い線が横にスッと伸びる ④ 展示が暗がりから明るくなる
+   JS が html に .fx を付けたときだけ効く（動きを減らす設定では付けない） */
+section.room { position: relative; isolation: isolate; }
+section.room::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0;
+  background: radial-gradient(120% 70% at 50% 0%, var(--acc, var(--tag)), transparent 70%); }
+.room-head { position: relative; }
+.room-head::before { content: ""; position: absolute; left: 0; right: 0; top: -22px; height: 2px; background: linear-gradient(90deg, var(--acc, var(--tag)), transparent 85%); transform-origin: left; }
+.fx section.room .room-head::before { transform: scaleX(0); }
+.fx section.room .room-head > * { opacity: 0; transform: translateY(16px); }
+.fx section.room .room-head ~ * { filter: brightness(.35); }
+.fx section.room.in::after { animation: glow 1.4s ease-out; }
+.fx section.room.in .room-head::before { transform: scaleX(1); transition: transform .9s cubic-bezier(.2,.7,.2,1) .1s; }
+.fx section.room.in .room-head > * { opacity: 1; transform: none; transition: opacity .6s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+.fx section.room.in .room-head > :nth-child(2) { transition-delay: .08s; }
+.fx section.room.in .room-head > :nth-child(3) { transition-delay: .16s; }
+.fx section.room.in .room-head > :nth-child(4) { transition-delay: .22s; }
+.fx section.room.in .room-head ~ * { filter: none; transition: filter .9s ease .25s; }
+@keyframes glow { 0% { opacity: 0; } 30% { opacity: .22; } 100% { opacity: 0; } }
+section.room.dark { color: var(--on-night); padding-block: 64px 72px; }
 .room-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 28px; }
-.room-head .no { font-family: var(--mono); font-size: 13px; color: var(--tag); letter-spacing: .1em; }
+.room-head .no { font-family: var(--mono); font-size: 13px; color: var(--acc, var(--tag)); letter-spacing: .1em; }
 .room-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 4.6vw, 40px); margin: 0; }
 .room-head .count { font-family: var(--mono); font-size: 13px; color: var(--muted); }
 .dark .room-head .count, .dark .card .meta { color: #9aa6a2; }
@@ -79,7 +134,7 @@ section.room.dark { background: var(--night); color: var(--on-night); padding-bl
 .wide .card .thumb, .card.video .thumb { aspect-ratio: 16/9; }
 .dark .card .thumb { border-color: #2c3533; background: #1d2422; }
 .card:hover .thumb, .card:focus-visible .thumb { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,.18); }
-.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb img { position: relative; width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb .ph { position: absolute; inset: 0; display: grid; place-items: center; font-size: 13px; color: var(--muted); border-radius: inherit;
   background: repeating-linear-gradient(45deg, transparent 0 14px, color-mix(in srgb, var(--line) 50%, transparent) 14px 15px); }
 .dark .thumb .ph { color: #7f8b88; background: repeating-linear-gradient(45deg, transparent 0 14px, #26302d 14px 15px); }
@@ -88,8 +143,47 @@ section.room.dark { background: var(--night); color: var(--on-night); padding-bl
 .card .cap { border-left: 3px solid var(--tag); padding-left: 10px; }
 .card .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
 .card .ttl { font-weight: 700; font-size: 15px; line-height: 1.5; }
+.thumb .m3d { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 40%, #3a4542, #161c1b); }
+.m3d canvas { display: block; width: 100% !important; height: 100% !important; }
+.thumb .badge3d { position: absolute; right: 10px; top: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; background: var(--tag); color: #1f2624; padding: 2px 8px; border-radius: 999px; }
+.viewer .m3d { width: 100%; height: 100%; touch-action: none; cursor: grab; background: radial-gradient(circle at 50% 40%, #2c3533, #141a19); }
+.grid.tallgrid { grid-template-columns: repeat(auto-fill, minmax(min(46%, 190px), 1fr)); }
+.tallgrid .card .thumb { aspect-ratio: 4/5; }
+.thumb .pages { position: absolute; right: 10px; top: 10px; font-family: var(--mono); font-size: 11px; background: rgba(18,23,22,.75); color: #f2f5f4; padding: 2px 8px; border-radius: 999px; }
+.card .date { font-family: var(--mono); font-size: 11px; color: var(--muted); }
 .card.soon { cursor: default; opacity: .55; }
 .card.soon:hover .thumb { transform: none; box-shadow: none; }
+.thumb .pick { position: absolute; left: 10px; top: 10px; font-size: 11px; font-weight: 700; background: var(--tag); color: #1f2624; padding: 2px 8px; border-radius: 999px; }
+
+/* 回る棚（ドーナツ）：サムネが輪っかに並び、前の 1 枚が一番大きい。輪の奥ほど上・小さく・暗く。作品が増えても縦に伸びない */
+.ring { --w: min(520px, 70vw); --h: calc(var(--w) * 9 / 16); --rise: calc(var(--h) * .42); position: relative; user-select: none; }
+.ring.tall { --w: min(230px, 46vw); --h: calc(var(--w) * 16 / 9); --rise: calc(var(--h) * .22); }
+.ring.port { --w: min(300px, 56vw); --h: calc(var(--w) * 5 / 4); --rise: calc(var(--h) * .28); }
+.ring.pic { --w: min(420px, 64vw); --h: calc(var(--w) * 3 / 4); --rise: calc(var(--h) * .36); }
+.ring .card.far { visibility: hidden; }
+.ring.one .spin, .ring.one .dots, .ring.many .dots { display: none; }
+.ring .stage3d { position: relative; height: calc(var(--h) + var(--rise) + 28px); touch-action: pan-y; overflow: hidden; outline: none; }
+.ring .card { position: absolute; left: 50%; top: calc(var(--rise) + 14px); width: var(--w); margin-left: calc(var(--w) / -2); will-change: transform; }
+.ring .card .thumb { aspect-ratio: auto; height: var(--h); transition: none; }
+.ring .card .cap { display: none; }
+.ring .card:not(.front) .play, .ring .card:not(.front) .pick { display: none; }
+.ring .card:hover .thumb { transform: none; }
+.ring .card.front .thumb { box-shadow: 0 18px 40px rgba(0,0,0,.4); }
+/* 左右の端：マウスを合わせている間（スマホは長押し）、速く回り続ける。押すと 1 つ進む */
+.ring .spin { position: absolute; top: 0; height: calc(var(--h) + var(--rise) + 28px); width: 15%; z-index: 300; border: 0; padding: 0; cursor: pointer; color: #f2f5f4; font-size: 26px; display: grid; align-items: center; opacity: .55; transition: opacity .2s; touch-action: pan-y; -webkit-touch-callout: none; }
+.ring .spin.l { left: 0; background: linear-gradient(90deg, rgba(0,0,0,.28), transparent); justify-items: start; padding-left: 10px; }
+.ring .spin.r { right: 0; background: linear-gradient(270deg, rgba(0,0,0,.28), transparent); justify-items: end; padding-right: 10px; }
+.ring .spin:hover, .ring .spin.on { opacity: 1; }
+.ring .spin span { width: 40px; height: 40px; border-radius: 50%; background: rgba(18,23,22,.72); display: grid; place-items: center; }
+.ring .rcap { text-align: center; margin-top: 12px; min-height: 4.2em; }
+.ring .rcap .ttl { font-weight: 700; font-size: 16px; }
+.ring .rcap .meta { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.dark .ring .rcap .meta { color: #9aa6a2; }
+.ring .dots { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ring .dots button { width: 8px; height: 8px; padding: 0; border-radius: 50%; border: 0; background: var(--line); cursor: pointer; }
+.dark .ring .dots button { background: #3a4542; }
+.ring .dots button[aria-current="true"] { background: var(--tag); width: 20px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .ring .card { transition: none; } }
 
 /* パラパラ：スクロールで札がめくれるように出てくる（対応ブラウザのみ。非対応でも普通に見える） */
 @supports (animation-timeline: view()) {
@@ -108,6 +202,14 @@ dialog.viewer { border: 0; padding: 0; background: transparent; width: min(1000p
 dialog.viewer::backdrop { background: rgba(8,10,10,.86); }
 .viewer .stage { aspect-ratio: 4/3; max-height: 72svh; margin-inline: auto; background: #1d2422; border-radius: 8px; overflow: hidden; display: grid; place-items: center; }
 .viewer .stage.v { aspect-ratio: 16/9; }
+.viewer .stage.t { aspect-ratio: 9/16; width: min(100%, calc(72svh * 9 / 16)); }
+.viewer .stage.s { aspect-ratio: 4/5; width: min(100%, calc(72svh * 4 / 5)); position: relative; display: block; }
+.viewer .slides { display: flex; width: 100%; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.viewer .slides img { flex: none; width: 100%; height: 100%; object-fit: contain; scroll-snap-align: center; }
+.viewer .sbtn { position: absolute; top: 50%; translate: 0 -50%; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(18,23,22,.7); color: #f2f5f4; font-size: 18px; cursor: pointer; }
+.viewer .sbtn.l { left: 8px; } .viewer .sbtn.r { right: 8px; }
+.viewer .scount { position: absolute; left: 50%; bottom: 10px; translate: -50% 0; font-family: var(--mono); font-size: 12px; background: rgba(18,23,22,.7); color: #f2f5f4; padding: 2px 10px; border-radius: 999px; }
+.viewer .links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .viewer .stage img, .viewer .stage iframe { width: 100%; height: 100%; object-fit: contain; border: 0; display: block; }
 .viewer .stage .ph { color: #9aa6a2; }
 .viewer .bar { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
@@ -120,22 +222,37 @@ dialog.viewer::backdrop { background: rgba(8,10,10,.86); }
 
 footer { padding-block: 48px 64px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
 footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+footer a { color: var(--ink); text-underline-offset: 3px; }
+/* YouTube・インスタへのリンク（2026-10-13 あっち「youtube インスタへのリンクは必要だ」） */
+.sns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.sns a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.22); background: rgba(0,0,0,.35); color: #fff; text-decoration: none; font-size: 14px; font-weight: 700; backdrop-filter: blur(4px); transition: border-color .2s, background .2s; }
+.sns a svg { width: 18px; height: 18px; }
+.sns a.yt:hover { border-color: #ff4e45; background: rgba(255,78,69,.15); }
+.sns a.ig:hover { border-color: #e48aa0; background: rgba(228,138,160,.15); }
 </style>
 </head>
 <body>
 
 <header class="hero">
-  <!-- トップに薄く流す動画：media/hero.mp4 を置くと流れる（無音・ループ）。無いときは作品タイルが流れる -->
-  <div class="drift" aria-hidden="true"></div>
-  <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="" hidden></video>
+  <!-- トップの裏で流す動画：お散歩日和の先頭 60 秒（無音・ループ）。PC は media/hero.mp4（1280 幅）、スマホは media/hero_sp.mp4（640 幅）。
+       届くまでは 1 コマ目の media/hero.jpg を出しておく。動画も 1 コマ目も無いときだけ作品タイルが流れる -->
+  <div class="drift" aria-hidden="true" hidden></div>
+  <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="media/hero.jpg" aria-hidden="true"></video>
+  <script>document.getElementById("hero-video").src = matchMedia("(max-width: 700px)").matches ? "media/hero_sp.mp4" : "media/hero.mp4";</script>
+  <div class="wrap hero-top">
+    <div class="plate">YUMA MUSEUM · ANNEX</div>
+    <h1 class="mark" aria-label="ゆうまmuseum 別館"><span>ゆうま</span><span class="o">museum<em>別館</em></span></h1>
+  </div>
   <div class="wrap hero-inner">
     <!-- トップの画像：media/yuma.jpg を置くと表示 -->
     <div class="portrait" id="portrait">ゆうまの<br>写真まち</div>
     <div class="hero-text">
-      <div class="plate">YUMA MUSEUM · ANNEX</div>
-      <h1>ゆうまmuseum 別館</h1>
       <p class="sub">犬の博物館</p>
       <p class="lead">ゆうまの作品をぜんぶ展示しています。MV、CMパロディ、3Dプリント、写真、ゲーム。どんどん増えます。</p>
+      <div class="sns">
+        <a class="yt" href="https://www.youtube.com/@acchuma-yuma" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.7 15.1V8.9L15.5 12z"/></svg>YouTube</a>
+        <a class="ig" href="https://www.instagram.com/atchuma_dayo/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M7 2.5h10A4.5 4.5 0 0 1 21.5 7v10a4.5 4.5 0 0 1-4.5 4.5H7A4.5 4.5 0 0 1 2.5 17V7A4.5 4.5 0 0 1 7 2.5z"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.6" cy="6.4" r="1.3" fill="currentColor"/></svg>Instagram</a>
+      </div>
     </div>
   </div>
 </header>
@@ -147,14 +264,16 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <footer>
   <div class="wrap">
     <span>ゆうまmuseum 別館 · 犬の博物館</span>
+    <span>絵・動画・声・曲の多くは AI を使って作っています</span>
     <span>本館（3Dミュージアム）準備中</span>
+    <span class="sns-links"><a href="https://www.youtube.com/@acchuma-yuma" target="_blank" rel="noopener">YouTube @acchuma-yuma</a> · <a href="https://www.instagram.com/atchuma_dayo/" target="_blank" rel="noopener">Instagram @atchuma_dayo</a></span>
   </div>
 </footer>
 
 <dialog class="viewer" id="viewer">
   <div class="stage" id="stage"></div>
   <div class="bar">
-    <div class="t"><div class="meta" id="v-meta"></div><div class="ttl" id="v-ttl"></div><div class="desc" id="v-desc"></div></div>
+    <div class="t"><div class="meta" id="v-meta"></div><div class="ttl" id="v-ttl"></div><div class="desc" id="v-desc"></div><div class="links" id="v-links"></div></div>
     <button class="btn" id="v-prev" type="button">前へ</button>
     <button class="btn" id="v-next" type="button">次へ</button>
     <button class="btn" id="v-close" type="button">閉じる</button>
@@ -169,33 +288,49 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
    - url: ゲームなどのリンク先
    - soon: true で「準備中」の札
    ============================================================ */
+const SNS = window.SNS_WORKS || {};
+const W = id => SNS[id] || [];
 const ROOMS = [
-  { id: "mv", no: "ROOM 1", name: "映像室", en: "MUSIC VIDEO", note: "ゆうまが主役のミュージックビデオ。", dark: true, kind: "video", max: 20, items: [
-    { title: "MV 01（タイトル未入力）", youtube: "JQ_ZTt-UFyg" },
-    { title: "MV 02（タイトル未入力）", youtube: "ukmmuA2oTCI" },
-    { title: "MV 03", soon: true },
+  { id: "mv", no: "ROOM 1", name: "映像室", en: "MUSIC VIDEO", note: "ゆうまが主役のミュージックビデオ。", dark: true, kind: "video", ring: true, max: 20, items: [
+    ...W("mv"),
   ]},
-  { id: "cm", no: "ROOM 2", name: "CMパロディ室", en: "CM PARODY", note: "あのCMを、ゆうまが演じたら。", kind: "video", items: [
+  { id: "short", no: "ROOM 2", name: "ショート劇場", en: "SHORT FILM", note: "あっち家、ユウマ目線「変だよね」など、SNSに出した短い動画。", kind: "video", tall: true, ring: true, items: [
+    ...W("short"),
+  ]},
+  { id: "ig", no: "ROOM 3", name: "イラスト展", en: "INSTAGRAM", note: "インスタに載せた絵と写真。タップすると、めくって見られます。", kind: "image", flip: true, tall: true, shape: "port", items: [
+    ...W("ig"),
+  ]},
+  { id: "cm", no: "ROOM 4", name: "CMパロディ室", en: "CM PARODY", note: "あのCMを、ゆうまが演じたら。", kind: "video", items: [
     { title: "CMパロディ 01", soon: true },
   ]},
-  { id: "kashima", no: "ROOM 3", name: "鹿島オウンメッセージ", en: "OWN MESSAGE", note: "鹿島オウンメッセージの動画。", kind: "video", items: [
+  // closed: true の部屋は出さない（消さずに残す。戻すときは closed を消す）
+  { id: "kashima", closed: true, no: "ROOM 5", name: "鹿島オウンメッセージ", en: "OWN MESSAGE", note: "鹿島オウンメッセージの動画。", kind: "video", items: [
     { title: "オウンメッセージ 01", soon: true },
   ]},
-  { id: "print", no: "ROOM 4", name: "造形室", en: "3D PRINT", note: "3Dプリンタで作った作品。スクロールするとパラパラ出てきます。気になったらタップで拡大。", kind: "image", flip: true,
-    items: Array.from({ length: 10 }, (_, i) => ({ title: `3Dプリント作品 ${String(i + 1).padStart(2, "0")}`, desc: "素材・制作年を入れる" })) },
-  { id: "photo", no: "ROOM 5", name: "写真室", en: "PHOTO", note: "ゆうまの写真。", kind: "image", flip: true, items: [
-    { title: "写真 01" }, { title: "写真 02" }, { title: "写真 03" }, { title: "写真 04" },
+  { id: "print", no: "ROOM 6", name: "造形室", en: "3D PRINT", note: "3Dプリンタで作った作品。気になったらタップで拡大。", kind: "image", flip: true, shape: "pic",
+    // model: GLBファイル（media/models/ に置く）→ 指でグルグル回せる
+    items: [
+      { title: "ぽんねこ", model: "media/models/ponneko_id17.glb", desc: "ドラッグ／指で回せます。ピンチで拡大" },
+      { title: "ゆうま のっかり", model: "media/models/yuma_nokkari_id19.glb", desc: "ドラッグ／指で回せます。ピンチで拡大" },
+      ...Array.from({ length: 8 }, (_, i) => ({ title: `3Dプリント作品 ${String(i + 3).padStart(2, "0")}`, desc: "素材・制作年を入れる" })),
+    ] },
+  { id: "photo", no: "ROOM 7", name: "写真室", en: "PHOTO", note: "ゆうまの写真。", kind: "image", flip: true, shape: "pic", items: [
+    ...W("photo"),
+    { title: "写真 02" }, { title: "写真 03" }, { title: "写真 04" },
   ]},
-  { id: "game", no: "ROOM 6", name: "あそび場", en: "BROWSER GAME", note: "ブラウザで遊べるゆうまのゲーム。", kind: "link", items: [
+  { id: "game", no: "ROOM 8", name: "あそび場", en: "BROWSER GAME", note: "ブラウザで遊べるゆうまのゲーム。", kind: "link", items: [
+    ...W("game"),
     { title: "ゲーム 01", soon: true },
   ]},
-];
+].filter(r => !r.closed).map((r, i) => ({ ...r, no: `ROOM ${i + 1}` }));
+
 const PREVIEW = false; // プレビュー画面用（YouTubeを埋め込めない環境ではリンクで開く）
 
-const CODE = { mv: "MV", cm: "CM", kashima: "OM", print: "3D", photo: "PH", game: "GM" };
+const CODE = { mv: "MV", short: "SF", ig: "IG", cm: "CM", kashima: "OM", print: "3D", photo: "PH", game: "GM" };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const thumbOf = it => it.img || (it.youtube ? `https://i.ytimg.com/vi/${it.youtube}/hqdefault.jpg` : "");
+// 縦動画は縦のサムネ（oar2）。無ければ横（hqdefault）に戻す
+const thumbOf = it => it.img || (it.youtube ? `https://i.ytimg.com/vi/${it.youtube}/${it.tall ? "oar2" : "hqdefault"}.jpg` : "");
 
 // エントランスの流れるタイル
 const drift = $(".drift");
@@ -204,10 +339,9 @@ for (let c = 0; c < 6; c++) {
   for (let k = 0; k < 16; k++) { const s = document.createElement("span"); s.style.setProperty("--h", (c * 47 + k * 23) % 360); col.append(s); }
   drift.append(col);
 }
-// hero.mp4 / yuma.jpg があれば使う
+// 動画が読めなかったときは作品タイルを流す
 const vid = $("#hero-video");
-vid.src = "media/hero.mp4";
-vid.addEventListener("loadeddata", () => { vid.hidden = false; drift.hidden = true; });
+vid.addEventListener("error", () => { vid.hidden = true; drift.hidden = false; });
 const pimg = new Image();
 pimg.onload = () => { const p = $("#portrait"); p.textContent = ""; pimg.alt = "ゆうま"; p.append(pimg); };
 pimg.src = "media/yuma.jpg";
@@ -221,33 +355,179 @@ $("#rooms").innerHTML = ROOMS.map(r => {
     const code = `YM-${CODE[r.id]}-${String(i + 1).padStart(3, "0")}`;
     const idx = it.soon ? -1 : flat.push({ ...it, code, kind: r.kind }) - 1;
     const src = thumbOf(it);
-    const isV = r.kind === "video";
+    const isV = r.kind === "video" && !r.tall;
     return `<button class="card${isV ? " video" : ""}${it.soon ? " soon" : ""}" type="button" ${it.soon ? "disabled" : `data-i="${idx}"`}>
-      <div class="thumb"><div class="ph">${it.soon ? "準備中" : isV ? "" : "写真まち"}</div>${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ""}${isV && !it.soon ? '<span class="play" aria-hidden="true"></span>' : ""}</div>
-      <div class="cap"><div class="meta">${code}</div><div class="ttl">${esc(it.title)}</div></div></button>`;
+      <div class="thumb"><div class="ph">${it.soon ? "準備中" : isV ? "" : r.kind === "link" ? "GAME" : "写真まち"}</div>${src ? `<img data-src="${esc(src)}" alt="" onerror="${it.youtube && it.tall ? `if(!this.dataset.f){this.dataset.f=1;this.src='https://i.ytimg.com/vi/${it.youtube}/hqdefault.jpg'}else ` : ""}this.remove()">` : it.model ? `<div class="m3d" data-model="${esc(it.model)}"></div>` : ""}${it.model ? '<span class="badge3d">3D</span>' : ""}${it.youtube && !it.soon ? '<span class="play" aria-hidden="true"></span>' : ""}${it.imgs?.length > 1 ? `<span class="pages">${it.imgs.length}枚</span>` : ""}${it.pick ? '<span class="pick">おすすめ</span>' : ""}</div>
+      <div class="cap"><div class="meta">${code}</div><div class="ttl">${esc(it.title)}</div>${it.date ? `<div class="date">${esc(it.date)}</div>` : ""}</div></button>`;
   }).join("");
   return `<section class="room${r.dark ? " dark" : ""}" id="${r.id}"><div class="wrap">
     <div class="room-head"><span class="no">${r.no} · ${r.en}</span><h2>${esc(r.name)}</h2><span class="count">${live}${r.max ? ` / ${r.max}` : ""} 点</span><p>${esc(r.note)}</p></div>
-    <div class="grid${r.kind === "video" || r.kind === "link" ? " wide" : ""}${r.flip ? " flip" : ""}">${cards}</div></div></section>`;
+    ${r.ring !== false ? `<div class="ring ${r.shape || (r.tall ? "tall" : "")}${r.items.length < 2 ? " one" : ""}"><div class="stage3d" tabindex="0" aria-label="${esc(r.name)}。左右の矢印で回せます">${cards}</div>
+      <button class="spin l" type="button" aria-label="前へ（合わせている間は速く回る）"><span>‹</span></button><button class="spin r" type="button" aria-label="次へ（合わせている間は速く回る）"><span>›</span></button>
+      <div class="rcap" aria-live="polite"></div><div class="dots"></div></div>`
+    : `<div class="grid${r.tall ? " tallgrid" : r.kind === "video" || r.kind === "link" ? " wide" : ""}${r.flip ? " flip" : ""}">${cards}</div>`}</div></section>`;
 }).join("");
 
+// 回る棚（ドーナツ）：カードを上から少し見下ろした輪に並べる。target が今の番号（はみ出してよい）、pos はそこへ滑らかに追いかける
+document.querySelectorAll(".ring").forEach(ring => {
+  const stage = ring.querySelector(".stage3d"), cards = [...stage.children], n = cards.length;
+  const cap = ring.querySelector(".rcap"), dots = ring.querySelector(".dots");
+  const tall = ring.classList.contains("tall"), still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let target = 0, pos = 0, raf = 0, fast = false;
+  const mod = i => ((i % n) + n) % n;
+  // 輪に並べるのは最大 12 枚分の席。作品が多いときは前後 6 枚ずつだけ描き、残りは隠して絵も読まない（50 点でも重ならず軽い）
+  const seats = Math.min(n, 12), half = seats / 2;
+  if (n > 12) ring.classList.add("many");
+  dots.innerHTML = cards.map((_, i) => `<button type="button" aria-label="${i + 1}番目"></button>`).join("");
+  function layout() {
+    const W = stage.clientWidth, w = cards[0].offsetWidth, h = cards[0].offsetHeight, a = w / h; // a: 横÷縦
+    const rx = Math.min(W * (a < 1 ? 0.36 : 0.34), w * (a < 0.7 ? 1.7 : a < 1 ? 1.35 : a < 1.5 ? 1.05 : 0.95));
+    const rise = h * (a < 0.7 ? 0.22 : a < 1 ? 0.28 : a < 1.5 ? 0.36 : 0.42);
+    cards.forEach((c, i) => {
+      let t = i - pos; if (n > 2) { t = ((t % n) + n) % n; if (t > n / 2) t -= n; }
+      const far = n > 12 && Math.abs(t) > half;
+      c.classList.toggle("far", far);
+      if (Math.abs(t) <= half + 1) { const im = c.querySelector("img[data-src]"); if (im) { im.src = im.dataset.src; im.removeAttribute("data-src"); } }
+      if (far) return;
+      const th = n > 2 ? (2 * Math.PI * t) / seats : t * 0.9, near = (1 + Math.cos(th)) / 2; // near: 前=1、奥=0
+      c.style.transform = `translate(${Math.sin(th) * rx}px, ${-(1 - near) * rise}px) scale(${0.42 + 0.58 * near})`;
+      c.style.zIndex = Math.round(near * 100) + 1;
+      c.style.filter = `brightness(${0.4 + 0.6 * near})`;
+    });
+  }
+  function tick() {
+    const d = target - pos;
+    pos = Math.abs(d) < 0.002 || still ? target : pos + d * (fast ? 0.35 : 0.14);
+    layout();
+    raf = pos === target ? 0 : requestAnimationFrame(tick);
+  }
+  function go(i) {
+    target = n > 2 ? i : Math.max(0, Math.min(n - 1, i));
+    const a = mod(target);
+    cards.forEach((c, k) => { c.classList.toggle("front", k === a); c.tabIndex = k === a ? 0 : -1; });
+    const t = cards[a], ttl = t.querySelector(".ttl")?.textContent || "", date = t.querySelector(".date")?.textContent || "";
+    cap.innerHTML = `<div class="ttl">${esc(ttl)}</div><div class="meta">${esc(date)}${date ? " · " : ""}${a + 1} / ${n}</div>`;
+    [...dots.children].forEach((b, k) => b.setAttribute("aria-current", k === a));
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  // 一番近い回り方でその番号へ
+  const goTo = k => { let d = k - mod(target); if (n > 2) { d = mod(d); if (d > n / 2) d -= n; } go(target + d); };
+  dots.onclick = e => { const b = e.target.closest("button"); if (b) goTo([...dots.children].indexOf(b)); };
+  stage.addEventListener("keydown", e => { if (e.key === "ArrowRight") { go(target + 1); e.preventDefault(); } if (e.key === "ArrowLeft") { go(target - 1); e.preventDefault(); } });
+  // 左右の端：合わせている間（スマホは長押し）速く回り続ける
+  ring.querySelectorAll(".spin").forEach(z => {
+    const dir = z.classList.contains("r") ? 1 : -1;
+    let timer = 0, hold = 0, spun = false;
+    const start = () => { if (timer) return; fast = true; z.classList.add("on"); spun = true; go(target + dir); timer = setInterval(() => go(target + dir), 150); };
+    const stop = () => { clearInterval(timer); clearTimeout(hold); timer = hold = 0; fast = false; z.classList.remove("on"); };
+    z.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") { spun = false; hold = setTimeout(start, 120); } });
+    z.addEventListener("pointerleave", stop);
+    z.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") { spun = false; hold = setTimeout(start, 300); } });
+    z.addEventListener("pointerup", e => { if (e.pointerType !== "mouse") stop(); });
+    z.addEventListener("pointercancel", stop);
+    z.addEventListener("contextmenu", e => e.preventDefault());
+    z.addEventListener("click", () => { if (!spun) go(target + dir); spun = false; });
+  });
+  // 横のホイール（トラックパッドの横スクロール）で回す。縦のスクロールはページのまま
+  let wt = 0;
+  stage.addEventListener("wheel", e => { if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; e.preventDefault(); if (Date.now() - wt < 250) return; wt = Date.now(); go(target + Math.sign(e.deltaX)); }, { passive: false });
+  // 指・マウスで左右にはらう
+  let x0 = null;
+  stage.addEventListener("pointerdown", e => { x0 = e.clientX; });
+  stage.addEventListener("pointerup", e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) { ring.dataset.drag = 1; go(target - Math.sign(dx)); setTimeout(() => delete ring.dataset.drag, 0); } });
+  // 前以外のカードを押したら、そのカードを前に回す（再生はしない）
+  stage.addEventListener("click", e => {
+    const c = e.target.closest(".card"); if (!c) return;
+    if (ring.dataset.drag || !c.classList.contains("front")) { e.stopPropagation(); if (!ring.dataset.drag) goTo(cards.indexOf(c)); }
+  });
+  addEventListener("resize", layout);
+  go(0);
+});
+
 // 拡大表示
-const dlg = $("#viewer"); let cur = 0;
+const dlg = $("#viewer"); let cur = 0, dlgView = null;
 function show(i) {
+  if (dlgView) { dlgView.dispose(); dlgView = null; }
   cur = (i + flat.length) % flat.length; const it = flat[cur]; const stage = $("#stage");
-  stage.className = "stage" + (it.youtube ? " v" : "");
+  stage.className = "stage" + (it.youtube ? (it.tall ? " t" : " v") : it.imgs ? " s" : "");
   if (it.youtube && !PREVIEW) stage.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${it.youtube}?autoplay=1" title="${esc(it.title)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
   else if (it.youtube) stage.innerHTML = `<a class="btn" href="https://youtu.be/${it.youtube}" target="_blank" rel="noopener">YouTubeで再生</a>`;
   else if (it.url) stage.innerHTML = `<a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">あそぶ</a>`;
+  else if (it.model) { stage.innerHTML = `<div class="m3d" role="img" aria-label="${esc(it.title)}"></div>`; dlgView = view3d(stage.firstChild, it.model, true); }
+  else if (it.imgs) {
+    // 何枚かある絵は、横にめくって見る
+    stage.innerHTML = `<div class="slides">${it.imgs.map((p, k) => `<img src="${esc(p)}" alt="${esc(it.title)} ${k + 1}枚目">`).join("")}</div>` +
+      (it.imgs.length > 1 ? `<button class="sbtn l" type="button" aria-label="前の絵">‹</button><button class="sbtn r" type="button" aria-label="次の絵">›</button><span class="scount">1 / ${it.imgs.length}</span>` : "");
+    const sl = stage.querySelector(".slides"), cnt = stage.querySelector(".scount");
+    const go = d => sl.scrollBy({ left: d * sl.clientWidth, behavior: "smooth" });
+    stage.querySelector(".sbtn.l")?.addEventListener("click", () => go(-1));
+    stage.querySelector(".sbtn.r")?.addEventListener("click", () => go(1));
+    sl.addEventListener("scroll", () => { if (cnt) cnt.textContent = `${Math.round(sl.scrollLeft / sl.clientWidth) + 1} / ${it.imgs.length}`; });
+  }
   else if (it.img) stage.innerHTML = `<img src="${esc(it.img)}" alt="${esc(it.title)}">`;
   else stage.innerHTML = `<div class="ph">写真まち</div>`;
-  $("#v-meta").textContent = it.code; $("#v-ttl").textContent = it.title; $("#v-desc").textContent = it.desc || "";
+  $("#v-meta").textContent = it.code + (it.date ? ` · ${it.date}` : ""); $("#v-ttl").textContent = it.title; $("#v-desc").textContent = it.desc || "";
+  $("#v-links").innerHTML = (it.links || []).map(l => `<a class="btn" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("");
 }
 $("#rooms").addEventListener("click", e => { const b = e.target.closest(".card[data-i]"); if (!b) return; show(+b.dataset.i); dlg.showModal(); });
 $("#v-prev").onclick = () => show(cur - 1);
 $("#v-next").onclick = () => show(cur + 1);
 $("#v-close").onclick = () => dlg.close();
-dlg.addEventListener("close", () => { $("#stage").innerHTML = ""; });
+dlg.addEventListener("close", () => { if (dlgView) { dlgView.dispose(); dlgView = null; } $("#stage").innerHTML = ""; });
+
+// ── 3Dビューア（three.js）：カードではゆっくり回転、拡大表示では指で回せる ──
+const MODEL_DATA = {}; // プレビュー用に埋め込んだモデル（本番では空）
+const glbCache = {};
+function loadGLB(path) {
+  if (!glbCache[path]) glbCache[path] = (MODEL_DATA[path]
+    ? Promise.resolve(Uint8Array.from(atob(MODEL_DATA[path]), c => c.charCodeAt(0)).buffer)
+    : fetch(path).then(r => r.arrayBuffer()));
+  return glbCache[path].then(buf => new Promise((ok, ng) => new THREE.GLTFLoader().parse(buf.slice(0), "", g => ok(g.scene), ng)));
+}
+function view3d(box, path, interactive) {
+  if (!window.THREE) return { dispose() {} };
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.85;
+  box.append(renderer.domElement);
+  const scene = new THREE.Scene();
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+  const sun = new THREE.DirectionalLight(0xffffff, 0.7); sun.position.set(2, 4, 3); scene.add(sun);
+  const cam = new THREE.PerspectiveCamera(35, 1, 0.001, 100);
+  const pivot = new THREE.Group(); scene.add(pivot);
+  let controls = null, alive = true, raf = 0;
+  if (interactive) { controls = new THREE.OrbitControls(cam, renderer.domElement); controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = 1.5; controls.enablePan = false; }
+  function size() { const w = box.clientWidth || 1, h = box.clientHeight || 1; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
+  const ro = new ResizeObserver(size); ro.observe(box); size();
+  loadGLB(path).then(obj => {
+    if (!alive) return;
+    const b = new THREE.Box3().setFromObject(obj), c = b.getCenter(new THREE.Vector3()), r = b.getBoundingSphere(new THREE.Sphere()).radius;
+    obj.position.sub(c); pivot.add(obj);
+    const d = r / Math.sin(THREE.MathUtils.degToRad(cam.fov / 2)) * 1.45;
+    cam.position.set(d * 0.55, d * 0.35, d * 0.76); cam.near = d / 100; cam.far = d * 10; cam.updateProjectionMatrix(); cam.lookAt(0, 0, 0);
+    if (controls) { controls.target.set(0, 0, 0); controls.minDistance = d * 0.3; controls.maxDistance = d * 3; controls.update(); }
+  }).catch(e => { box.textContent = "3Dを読み込めませんでした"; console.error(e); });
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  (function tick() { if (!alive) return; raf = requestAnimationFrame(tick); if (controls) controls.update(); else if (!still) pivot.rotation.y += 0.005; renderer.render(scene, cam); })();
+  return { dispose() { alive = false; cancelAnimationFrame(raf); ro.disconnect(); controls?.dispose(); pm.dispose(); renderer.dispose(); renderer.forceContextLoss(); } };
+}
+// カードの3Dは画面に入ったときだけ動かす
+const thumbViews = new Map();
+// 部屋に入ったときの演出：部屋が画面の 3 割まで来たら 1 回だけ .in を付ける
+if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+  document.documentElement.classList.add("fx");
+  const enter = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add("in"); enter.unobserve(e.target); }
+  }), { rootMargin: "0px 0px -30% 0px" });
+  document.querySelectorAll("section.room").forEach(sec => enter.observe(sec));
+}
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting && !thumbViews.has(e.target)) thumbViews.set(e.target, view3d(e.target, e.target.dataset.model, false));
+  else if (!e.isIntersecting && thumbViews.has(e.target)) { thumbViews.get(e.target).dispose(); thumbViews.delete(e.target); e.target.innerHTML = ""; }
+}), { rootMargin: "200px" });
+document.querySelectorAll(".thumb .m3d").forEach(el => io.observe(el));
 dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 document.addEventListener("keydown", e => { if (!dlg.open) return; if (e.key === "ArrowRight") show(cur + 1); if (e.key === "ArrowLeft") show(cur - 1); });
 </script>
