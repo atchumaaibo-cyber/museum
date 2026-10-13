@@ -18,26 +18,27 @@
 <style>
 /* Layout: 全面に薄く流れる動画のエントランス → 展示室ごとの帯（MVが主役）。作品札に作品番号。 */
 :root {
-  --wall: #eef1f0;
-  --panel: #ffffff;
-  --ink: #1f2624;
-  --muted: #5d6865;
-  --tag: #e2a92b;          /* ゆうまの迷子札の金色 */
-  --line: #cfd6d4;
-  --night: #121716;        /* エントランスと映像室の暗幕 */
+  /* 館内はぜんぶ暗い色（2026-10-13 あっち「グレーに急になるから違和感。トップの効果と馴染むように」） */
+  --wall: #161b1a;
+  --panel: #212826;
+  --ink: #e9eeec;
+  --muted: #9aa6a2;
+  --tag: #f0bc4a;          /* ゆうまの迷子札の金色 */
+  --line: #333e3b;
+  --night: #0e1211;        /* エントランスと映像室の暗幕 */
   --on-night: #f2f5f4;
   --display: "Dela Gothic One", "Hiragino Sans", sans-serif;
   --body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, monospace;
-  color-scheme: light;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --wall: #171c1b; --panel: #222927; --ink: #e9eeec; --muted: #9aa6a2; --tag: #f0bc4a; --line: #34403d; --night: #0c100f; color-scheme: dark; } }
-:root[data-theme="dark"] { --wall: #171c1b; --panel: #222927; --ink: #e9eeec; --muted: #9aa6a2; --tag: #f0bc4a; --line: #34403d; --night: #0c100f; color-scheme: dark; }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--wall); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.8; }
+/* 館内の壁にもトップと同じ網目（5px ごとの点）をごく薄く。上（映像室のあたり）は暗く、下へ少しずつ明るく */
+body { margin: 0; background:
+  radial-gradient(circle, rgba(0,0,0,.35) 1.2px, transparent 1.7px) 0 0 / 5px 5px,
+  linear-gradient(180deg, var(--night) 0, var(--wall) 1400px) var(--wall); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.8; }
 .wrap { max-width: 1160px; margin: 0 auto; padding-inline: 20px; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
@@ -84,7 +85,7 @@ nav.guide a:hover { border-color: var(--tag); }
 
 /* ── 展示室 ── */
 section.room { padding-block: 64px 16px; scroll-margin-top: 56px; }
-section.room.dark { background: var(--night); color: var(--on-night); padding-block: 64px 72px; }
+section.room.dark { background: transparent; color: var(--on-night); padding-block: 64px 72px; }
 .room-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 28px; }
 .room-head .no { font-family: var(--mono); font-size: 13px; color: var(--tag); letter-spacing: .1em; }
 .room-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 4.6vw, 40px); margin: 0; }
@@ -257,7 +258,8 @@ const ROOMS = [
   { id: "cm", no: "ROOM 4", name: "CMパロディ室", en: "CM PARODY", note: "あのCMを、ゆうまが演じたら。", kind: "video", items: [
     { title: "CMパロディ 01", soon: true },
   ]},
-  { id: "kashima", no: "ROOM 5", name: "鹿島オウンメッセージ", en: "OWN MESSAGE", note: "鹿島オウンメッセージの動画。", kind: "video", items: [
+  // closed: true の部屋は出さない（消さずに残す。戻すときは closed を消す）
+  { id: "kashima", closed: true, no: "ROOM 5", name: "鹿島オウンメッセージ", en: "OWN MESSAGE", note: "鹿島オウンメッセージの動画。", kind: "video", items: [
     { title: "オウンメッセージ 01", soon: true },
   ]},
   { id: "print", no: "ROOM 6", name: "造形室", en: "3D PRINT", note: "3Dプリンタで作った作品。気になったらタップで拡大。", kind: "image", flip: true, shape: "pic",
@@ -275,7 +277,7 @@ const ROOMS = [
     ...W("game"),
     { title: "ゲーム 01", soon: true },
   ]},
-];
+].filter(r => !r.closed).map((r, i) => ({ ...r, no: `ROOM ${i + 1}` }));
 
 const PREVIEW = false; // プレビュー画面用（YouTubeを埋め込めない環境ではリンクで開く）
 
