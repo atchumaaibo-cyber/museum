@@ -3,6 +3,24 @@
 window.SNS_WORKS = {
  "short": [
   {
+   "title": "ユウマ目線「変だよね」第3話 雨",
+   "date": "2026-10-13",
+   "desc": "雨は敵なのです。",
+   "youtube": "cIBuYdtVXkg",
+   "tall": true,
+   "img": "media/sns/hendayo03_thumb.jpg",
+   "links": [
+    {
+     "label": "Instagramで見る",
+     "url": "https://www.instagram.com/reel/DebuDpZiRg3/"
+    },
+    {
+     "label": "YouTubeで見る",
+     "url": "https://www.youtube.com/shorts/cIBuYdtVXkg"
+    }
+   ]
+  },
+  {
    "title": "はじめまして、チワワのユウマです",
    "date": "2026-10-12",
    "desc": "チャンネルの自己紹介。",
