@@ -33,19 +33,6 @@ window.SNS_WORKS = {
    ]
   },
   {
-   "title": "たぬき探偵ジェリー 〜失われた記憶〜 PV",
-   "date": "2026-10-12",
-   "desc": "ゲームのPV。ゲームは「あそび場」で遊べます。",
-   "youtube": "i5AZU7fiRXI",
-   "tall": true,
-   "links": [
-    {
-     "label": "YouTubeで見る",
-     "url": "https://www.youtube.com/shorts/i5AZU7fiRXI"
-    }
-   ]
-  },
-  {
    "title": "ユウマ目線「変だよね」第1話 箱",
    "date": "2026-10-10",
    "desc": "ユウマ目線の変なことっていっぱいありそうですね～",
@@ -80,14 +67,6 @@ window.SNS_WORKS = {
      "url": "https://www.youtube.com/shorts/nKBw3TlWJM0"
     }
    ]
-  }
- ],
- "game": [
-  {
-   "title": "たぬき探偵ジェリー",
-   "date": "2026-10-12",
-   "desc": "PV の説明欄から遊べるブラウザゲーム。",
-   "url": "https://atchumaaibo-cyber.github.io/game/games/jerrymushi/"
   }
  ],
  "ig": [
