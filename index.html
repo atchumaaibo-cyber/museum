@@ -44,26 +44,34 @@ button { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--tag); outline-offset: 3px; }
 
 /* ── エントランス ── */
-.hero { position: relative; overflow: hidden; background: var(--night) url(media/hero.jpg) center / cover; color: var(--on-night); min-height: min(720px, 88svh); display: grid; align-items: end; isolation: isolate; }
+.hero { position: relative; overflow: hidden; background: var(--night) url(media/hero.jpg) center / cover; color: var(--on-night); min-height: min(760px, 92svh); display: flex; flex-direction: column; justify-content: space-between; isolation: isolate; }
 .hero video, .hero .drift { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
 .hero .drift { opacity: .32; }
-/* 全面に黒いフィルター＋細かい黒の網目（3px ごとの点）。動画は裏で動いている感じに */
+/* 全面に黒いフィルター＋黒の網目（5px ごとの点）。動画は裏で動いている感じに */
 .hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background:
-  radial-gradient(circle, rgba(0,0,0,.75) .7px, transparent 1.1px) 0 0 / 3px 3px,
-  linear-gradient(180deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.55) 60%, var(--night) 100%); }
+  radial-gradient(circle, rgba(0,0,0,.8) 1.2px, transparent 1.7px) 0 0 / 5px 5px,
+  linear-gradient(180deg, rgba(0,0,0,.62) 0%, rgba(0,0,0,.42) 45%, rgba(0,0,0,.58) 70%, var(--night) 100%); }
 /* 動画が届くまでの代わり：作品タイルがゆっくり流れる */
 .drift { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; padding: 14px; transform: rotate(-6deg) scale(1.25); }
 .drift .col { display: flex; flex-direction: column; gap: 14px; animation: flow 60s linear infinite; }
 .drift .col:nth-child(even) { animation-direction: reverse; animation-duration: 75s; }
 .drift .col span { aspect-ratio: 4/3; border-radius: 6px; background: hsl(var(--h) 30% 42%); }
 @keyframes flow { from { transform: translateY(0); } to { transform: translateY(-50%); } }
-.hero-inner { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 28px 40px; padding-block: 120px 56px; }
+/* タイトルは上に大きく 2 行：ゆうま（白）／museum（線だけ）＋別館の札 */
+.hero-top { padding-top: clamp(36px, 7vw, 72px); }
+.hero .mark { font-family: var(--display); font-weight: 400; margin: 12px 0 0; line-height: .9; letter-spacing: -.01em; font-size: clamp(58px, 13.5vw, 172px); }
+.mark span { display: block; animation: rise .9s cubic-bezier(.2,.7,.2,1) both; }
+.mark span + span { animation-delay: .15s; }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+@media (prefers-reduced-motion: reduce) { .mark span { animation: none; } }
+.mark .o { color: transparent; -webkit-text-stroke: clamp(1.5px, .25vw, 3px) #f2f5f4; }
+.mark em { font-style: normal; display: inline-block; vertical-align: top; margin: .35em 0 0 .3em; padding: .3em .6em; font-size: .17em; letter-spacing: .3em; line-height: 1; color: #1f2624; background: var(--tag); -webkit-text-stroke: 0; border-radius: 3px; }
+.hero-inner { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 24px 36px; padding-block: 40px 56px; }
 .portrait { width: clamp(140px, 22vw, 220px); aspect-ratio: 1; border-radius: 50%; border: 4px solid var(--tag); overflow: hidden; flex: none;
   display: grid; place-items: center; background: #2a3230; color: #b9c4c0; font-size: 13px; text-align: center; }
 .portrait img { width: 100%; height: 100%; object-fit: cover; }
 .hero-text { min-width: 0; flex: 1 1 320px; }
 .plate { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--tag); }
-.hero h1 { font-family: var(--display); font-weight: 400; font-size: clamp(40px, 8.4vw, 96px); line-height: 1.05; margin: 10px 0 8px; text-wrap: balance; }
 .hero .sub { font-family: var(--display); font-size: clamp(20px, 3.4vw, 32px); margin: 0; letter-spacing: .12em; }
 .hero .lead { margin: 12px 0 0; color: #b9c4c0; max-width: 34em; }
 
@@ -190,12 +198,14 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   <div class="drift" aria-hidden="true" hidden></div>
   <video id="hero-video" autoplay muted loop playsinline preload="auto" poster="media/hero.jpg" aria-hidden="true"></video>
   <script>document.getElementById("hero-video").src = matchMedia("(max-width: 700px)").matches ? "media/hero_sp.mp4" : "media/hero.mp4";</script>
+  <div class="wrap hero-top">
+    <div class="plate">YUMA MUSEUM · ANNEX</div>
+    <h1 class="mark" aria-label="ゆうまmuseum 別館"><span>ゆうま</span><span class="o">museum<em>別館</em></span></h1>
+  </div>
   <div class="wrap hero-inner">
     <!-- トップの画像：media/yuma.jpg を置くと表示 -->
     <div class="portrait" id="portrait">ゆうまの<br>写真まち</div>
     <div class="hero-text">
-      <div class="plate">YUMA MUSEUM · ANNEX</div>
-      <h1>ゆうまmuseum 別館</h1>
       <p class="sub">犬の博物館</p>
       <p class="lead">ゆうまの作品をぜんぶ展示しています。MV、CMパロディ、3Dプリント、写真、ゲーム。どんどん増えます。</p>
     </div>
