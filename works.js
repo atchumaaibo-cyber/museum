@@ -3,6 +3,23 @@
 window.SNS_WORKS = {
  "short": [
   {
+   "title": "ユウマの挑戦 ファッションモデル",
+   "date": "2026-10-15",
+   "desc": "ランウェイでキメ顔！ ユウマの挑戦、第1話です。",
+   "youtube": "_rJSvM6bj4k",
+   "tall": true,
+   "links": [
+    {
+     "label": "Instagramで見る",
+     "url": "https://www.instagram.com/reel/Deg1rH3CRIB/"
+    },
+    {
+     "label": "YouTubeで見る",
+     "url": "https://www.youtube.com/shorts/_rJSvM6bj4k"
+    }
+   ]
+  },
+  {
    "title": "ユウマ目線「変だよね」第3話 雨",
    "date": "2026-10-13",
    "desc": "雨は敵なのです。",
