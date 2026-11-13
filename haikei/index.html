@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>はいけいとキャラ いちらん</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fffaf2;--card:#ffffff;--fg:#3b2f2a;--muted:#7a6a60;--line:#eadfd2;--accent:#e8743b}
+@media (prefers-color-scheme:dark){:root{--bg:#1f1b18;--card:#2a2522;--fg:#f3ebe3;--muted:#b9aa9d;--line:#3d3530;--accent:#f39a66}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Zen Maru Gothic",system-ui,sans-serif;line-height:1.7}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 48px;display:grid;gap:28px}
+h1{font-size:1.5rem;margin:0}
+h2{font-size:1.25rem;margin:0 0 4px;border-left:6px solid var(--accent);padding-left:10px}
+h3{font-size:1.05rem;margin:0}
+p{margin:0}
+.lead{color:var(--muted)}
+.place{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px}
+.seasons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media (max-width:760px){.seasons{grid-template-columns:repeat(2,minmax(0,1fr))}.seasons figure:first-child{grid-column:1/-1}}
+figure{margin:0;display:grid;gap:2px;min-width:0}
+figure img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;cursor:zoom-in;display:block}
+figcaption{font-size:.9rem;color:var(--muted);text-align:center}
+.charas{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.charas figure{background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px}
+.charas img{aspect-ratio:3/4;object-fit:contain;background:#fff}
+.charas figcaption{color:#3b2f2a;font-weight:700;font-size:1rem}
+.ask{background:var(--card);border:2px dashed var(--accent);border-radius:14px;padding:18px;text-align:center;font-size:1.1rem}
+.ask a{color:var(--accent);font-weight:700}
+#zoom{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:12px;z-index:9}
+#zoom[hidden]{display:none}
+#zoom img{max-width:100%;max-height:100%}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>はいけい と キャラ の いちらん</h1>
+    <p class="lead">「元気かな？！１年後の私」でつかう はいけい と キャラ です。えを おすと 大きく みられます。</p>
+  </header>
+
+  <section>
+    <h2>はいけい</h2>
+    <p class="lead">5つの ばしょ × 「ふつう・はる・なつ・あき・ふゆ」</p>
+  </section>
+  <div id="places" style="display:grid;gap:16px"></div>
+
+  <section>
+    <h2>キャラ</h2>
+  </section>
+  <div class="charas" id="charas"></div>
+
+  <!-- オープンチャットの URL が決まったら、下の OPENCHAT_URL に入れる -->
+  <div class="ask" id="ask">
+    ほかに ついか したい はいけい・キャラ・こもの が あったら、<span id="oc">オープンチャット</span>で おしえてね！
+  </div>
+</main>
+<div id="zoom" hidden><img alt=""></div>
+<script>
+const OPENCHAT_URL = ""; // 例 "https://line.me/ti/g2/xxxx"
+const PLACES = [
+  ["aisel_out","アイセル（そと）"],["aisel_room","アイセル（へやの なか）"],
+  ["fuji","ふじさん"],["eki","しずおかえき"],["abe","あべかわ"]];
+const SEASONS = [["","ふつう"],["_haru","はる"],["_natsu","なつ"],["_aki","あき"],["_fuyu","ふゆ"]];
+const CHARAS = [["kaito","kaito"],["poko","poko"],["ike","イケ"],["hiyoko","ひよこ"],
+  ["umi","海"],["banauta","ばなうたくん"],["becchan","べっちゃん"]];
+const z = document.getElementById("zoom");
+const fig = (src, cap) => {
+  const f = document.createElement("figure"), i = document.createElement("img"), c = document.createElement("figcaption");
+  i.src = src; i.alt = cap; i.loading = "lazy"; c.textContent = cap;
+  i.onclick = () => { z.querySelector("img").src = src; z.hidden = false; };
+  f.append(i, c); return f;
+};
+z.onclick = () => { z.hidden = true; };
+const P = document.getElementById("places");
+for (const [k, name] of PLACES) {
+  const s = document.createElement("div"); s.className = "place";
+  const h = document.createElement("h3"); h.textContent = name;
+  const row = document.createElement("div"); row.className = "seasons";
+  for (const [e, cap] of SEASONS) row.append(fig(`img/${k}${e}.jpg`, cap));
+  s.append(h, row); P.append(s);
+}
+const C = document.getElementById("charas");
+for (const [k, name] of CHARAS) C.append(fig(`img/chara_${k}.jpg`, name));
+if (OPENCHAT_URL) {
+  const a = document.createElement("a"); a.href = OPENCHAT_URL; a.target = "_blank"; a.rel = "noopener";
+  a.textContent = "オープンチャット"; document.getElementById("oc").replaceWith(a);
+}
+</script>
+</body>
+</html>
